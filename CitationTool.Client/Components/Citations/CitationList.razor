@@ -1,5 +1,6 @@
 @inject ICitationService CitationService
 @inject IDomainService DomainService
+@inject ISavedSearchService SavedSearchService
 @inject IJSRuntime JS
 @inject NavigationManager Navigation
 
@@ -60,10 +61,18 @@
 
             @if (_filterOptions.HasActiveFilters)
             {
-                <button class="btn btn-outline-secondary btn-sm w-100" @onclick="ClearFilters">
+                <button class="btn btn-outline-secondary btn-sm w-100" @onclick="ClearFiltersAndSearch">
                     <i class="bi bi-x-lg me-1"></i>Clear Filters
                 </button>
             }
+
+            <hr class="my-3" />
+
+            <SavedSearchPanel CurrentFilters="_filterOptions"
+                              CurrentDomainName="@GetCurrentDomainName()"
+                              ShowSaveButton="true"
+                              ActiveSearchId="_activeSearchId"
+                              OnSearchApplied="HandleSavedSearchApplied" />
         </div>
     </div>
 
@@ -97,7 +106,7 @@
             {
                 <EmptyState Icon="bi-search" Title="No matches found"
                             Message="No citations match your current filters."
-                            ActionText="Clear Filters" OnAction="ClearFilters" ActionIcon="bi-x-lg" />
+                            ActionText="Clear Filters" OnAction="ClearFiltersAndSearch" ActionIcon="bi-x-lg" />
             }
             else
             {
@@ -126,6 +135,7 @@
     private bool _isLoading = true;
     private ConfirmDialog? _confirmDialog;
     private System.Timers.Timer? _searchTimer;
+    private Guid? _activeSearchId;
 
     protected override async Task OnInitializedAsync()
     {
@@ -157,7 +167,7 @@
         }
     }
 
-    private async Task ApplyFilters()
+    private async Task ApplyFilters(bool preserveActiveSearch = false)
     {
         if (!string.IsNullOrEmpty(_selectedDomainId) && Guid.TryParse(_selectedDomainId, out var domainId))
         {
@@ -166,6 +176,12 @@
         else
         {
             _filterOptions.DomainId = null;
+        }
+
+        // Clear active search when user manually changes filters
+        if (!preserveActiveSearch)
+        {
+            _activeSearchId = null;
         }
 
         _filteredCitations = await CitationService.SearchAsync(_filterOptions);
@@ -233,5 +249,33 @@
     private async Task HandleCopy(string text)
     {
         await JS.InvokeVoidAsync("navigator.clipboard.writeText", text);
+    }
+
+    private string? GetCurrentDomainName()
+    {
+        if (_filterOptions.DomainId.HasValue)
+        {
+            return _domains.FirstOrDefault(d => d.Id == _filterOptions.DomainId.Value)?.Name;
+        }
+        return null;
+    }
+
+    private async Task HandleSavedSearchApplied(SavedSearch savedSearch)
+    {
+        _activeSearchId = savedSearch.Id;
+
+        // Apply the saved search filters
+        _filterOptions = savedSearch.Filters.ToFilterOptions();
+
+        // Update the domain dropdown to match
+        _selectedDomainId = savedSearch.Filters.DomainId?.ToString() ?? "";
+
+        await ApplyFilters(preserveActiveSearch: true);
+    }
+
+    private async Task ClearFiltersAndSearch()
+    {
+        _activeSearchId = null;
+        await ClearFilters();
     }
 }

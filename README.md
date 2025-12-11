@@ -4,6 +4,7 @@ A modern citation management application for IT professionals and researchers. O
 
 ## Features
 
+### Core Features
 - **Citation Management**: Add, edit, and organize citations with IEEE/ACM-style fields
 - **Domain Organization**: Categorize citations by research area (AI, Security, DevOps, etc.)
 - **Smart Search**: Full-text search across titles, authors, abstracts, DOIs, and tags
@@ -11,6 +12,19 @@ A modern citation management application for IT professionals and researchers. O
 - **Import Support**: Import from CSV, JSON, or BibTeX files
 - **URL Health Checking**: Verify citation URLs are still accessible
 - **Offline-First**: Data stored locally in your browser (IndexedDB)
+
+### Smart Citation Features
+- **DOI Auto-Lookup**: Enter a DOI to automatically populate all citation fields from CrossRef (no API key required)
+- **Duplicate Detection**: Intelligent detection of potential duplicates using:
+  - Exact DOI matching
+  - Fuzzy title matching (Levenshtein distance)
+  - Author + year combination checks
+- **Saved Searches**: Save frequently used filter combinations for quick access
+  - Pin important searches to the top
+  - One-click to restore all filter settings
+  - Usage tracking to see which searches you use most
+
+### Integration
 - **MCP Server**: AI/LLM integration via Model Context Protocol
 - **Python SDK**: Programmatic access for data scientists
 

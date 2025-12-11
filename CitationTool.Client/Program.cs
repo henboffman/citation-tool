@@ -28,6 +28,9 @@ builder.Services.AddScoped<ICitationService, CitationService>();
 builder.Services.AddScoped<IDomainService, DomainService>();
 builder.Services.AddScoped<IImportExportService, ImportExportService>();
 builder.Services.AddScoped<IUrlHealthService, UrlHealthService>();
+builder.Services.AddScoped<IDoiLookupService, DoiLookupService>();
+builder.Services.AddScoped<IDuplicateDetectionService, DuplicateDetectionService>();
+builder.Services.AddScoped<ISavedSearchService, SavedSearchService>();
 builder.Services.AddScoped<SeedDataService>();
 
 // Validators

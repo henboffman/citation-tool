@@ -153,6 +153,63 @@ public class IndexedDbStorageService : IStorageService
         }
     }
 
+    public async Task<List<SavedSearch>> GetAllSavedSearchesAsync()
+    {
+        try
+        {
+            var result = await _jsRuntime.InvokeAsync<JsonElement>("indexedDbInterop.getAll", "savedSearches");
+            return DeserializeList<SavedSearch>(result);
+        }
+        catch (Exception ex)
+        {
+            Console.Error.WriteLine($"Error getting saved searches: {ex.Message}");
+            return new List<SavedSearch>();
+        }
+    }
+
+    public async Task<SavedSearch?> GetSavedSearchAsync(Guid id)
+    {
+        try
+        {
+            var result = await _jsRuntime.InvokeAsync<JsonElement?>("indexedDbInterop.get", "savedSearches", id.ToString());
+            if (result == null || result.Value.ValueKind == JsonValueKind.Null)
+                return null;
+            return JsonSerializer.Deserialize<SavedSearch>(result.Value.GetRawText(), _jsonOptions);
+        }
+        catch (Exception ex)
+        {
+            Console.Error.WriteLine($"Error getting saved search {id}: {ex.Message}");
+            return null;
+        }
+    }
+
+    public async Task<bool> SaveSavedSearchAsync(SavedSearch savedSearch)
+    {
+        try
+        {
+            var jsonElement = JsonSerializer.SerializeToElement(savedSearch, _jsonOptions);
+            return await _jsRuntime.InvokeAsync<bool>("indexedDbInterop.put", "savedSearches", jsonElement);
+        }
+        catch (Exception ex)
+        {
+            Console.Error.WriteLine($"Error saving saved search: {ex.Message}");
+            return false;
+        }
+    }
+
+    public async Task<bool> DeleteSavedSearchAsync(Guid id)
+    {
+        try
+        {
+            return await _jsRuntime.InvokeAsync<bool>("indexedDbInterop.delete", "savedSearches", id.ToString());
+        }
+        catch (Exception ex)
+        {
+            Console.Error.WriteLine($"Error deleting saved search {id}: {ex.Message}");
+            return false;
+        }
+    }
+
     public async Task<List<Citation>> GetCitationsByDomainAsync(Guid domainId)
     {
         try
@@ -226,6 +283,7 @@ public class IndexedDbStorageService : IStorageService
         {
             await _jsRuntime.InvokeAsync<bool>("indexedDbInterop.clear", "citations");
             await _jsRuntime.InvokeAsync<bool>("indexedDbInterop.clear", "domains");
+            await _jsRuntime.InvokeAsync<bool>("indexedDbInterop.clear", "savedSearches");
             await _jsRuntime.InvokeAsync<bool>("indexedDbInterop.clear", "settings");
             return true;
         }

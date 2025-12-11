@@ -28,7 +28,7 @@ public class UrlHealthStatus
     public string StatusText => Level switch
     {
         HealthLevel.Healthy => "OK",
-        HealthLevel.CorsBlocked => "OK (CORS)",
+        HealthLevel.CorsBlocked => "Unreachable (CORS)",
         HealthLevel.Redirect => "Redirect",
         HealthLevel.NotFound => "Not Found",
         HealthLevel.ServerError => "Server Error",
@@ -39,7 +39,7 @@ public class UrlHealthStatus
     public string CssClass => Level switch
     {
         HealthLevel.Healthy => "text-success",
-        HealthLevel.CorsBlocked => "text-success",
+        HealthLevel.CorsBlocked => "text-secondary",  // Neutral - we can't verify
         HealthLevel.Redirect => "text-warning",
         HealthLevel.NotFound => "text-danger",
         HealthLevel.ServerError => "text-danger",
@@ -50,7 +50,7 @@ public class UrlHealthStatus
     public string IconClass => Level switch
     {
         HealthLevel.Healthy => "bi-check-circle-fill",
-        HealthLevel.CorsBlocked => "bi-check-circle",
+        HealthLevel.CorsBlocked => "bi-shield-exclamation",  // Indicates browser restriction
         HealthLevel.Redirect => "bi-arrow-right-circle-fill",
         HealthLevel.NotFound => "bi-x-circle-fill",
         HealthLevel.ServerError => "bi-exclamation-triangle-fill",
@@ -63,7 +63,7 @@ public enum HealthLevel
 {
     Unknown,
     Healthy,
-    CorsBlocked,  // Server responded but browser blocked due to CORS - likely healthy
+    CorsBlocked,  // Browser blocked the request - cannot verify server health
     Redirect,
     NotFound,
     ServerError,

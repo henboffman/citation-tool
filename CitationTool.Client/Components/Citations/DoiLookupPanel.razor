@@ -1,0 +1,127 @@
+@inject IDoiLookupService DoiLookupService
+
+<div class="card mb-4 border-primary">
+    <div class="card-header bg-primary bg-opacity-10">
+        <h6 class="mb-0">
+            <i class="bi bi-search me-2"></i>
+            Quick Add via DOI
+        </h6>
+    </div>
+    <div class="card-body">
+        <p class="text-muted small mb-3">
+            Enter a DOI to automatically populate citation fields from CrossRef.
+        </p>
+
+        <div class="input-group">
+            <span class="input-group-text" id="doi-addon">
+                <i class="bi bi-link-45deg"></i>
+            </span>
+            <input type="text"
+                   class="form-control @(_hasError ? "is-invalid" : "")"
+                   placeholder="e.g., 10.1145/3359591.3359737 or https://doi.org/..."
+                   @bind="_doiInput"
+                   @bind:event="oninput"
+                   @onkeydown="HandleKeyDown"
+                   aria-label="DOI"
+                   aria-describedby="doi-addon"
+                   disabled="@_isLoading" />
+            <button class="btn btn-primary"
+                    type="button"
+                    @onclick="LookupDoi"
+                    disabled="@(_isLoading || string.IsNullOrWhiteSpace(_doiInput))"
+                    aria-label="Look up DOI">
+                @if (_isLoading)
+                {
+                    <span class="spinner-border spinner-border-sm me-1" role="status" aria-hidden="true"></span>
+                    <span>Looking up...</span>
+                }
+                else
+                {
+                    <i class="bi bi-arrow-right-circle me-1"></i>
+                    <span>Lookup</span>
+                }
+            </button>
+        </div>
+
+        @if (_hasError && !string.IsNullOrEmpty(_errorMessage))
+        {
+            <div class="invalid-feedback d-block mt-2">
+                <i class="bi bi-exclamation-circle me-1"></i>
+                @_errorMessage
+            </div>
+        }
+
+        @if (_lookupSuccess)
+        {
+            <div class="alert alert-success mt-3 mb-0" role="alert">
+                <i class="bi bi-check-circle me-2"></i>
+                Citation data loaded successfully! Review and adjust the fields below.
+            </div>
+        }
+
+        <div class="form-text mt-2">
+            <strong>Supported formats:</strong> 10.xxxx/xxxxx, doi:10.xxxx/xxxxx, https://doi.org/10.xxxx/xxxxx
+        </div>
+    </div>
+</div>
+
+@code {
+    /// <summary>
+    /// Callback when DOI lookup succeeds, providing the populated citation.
+    /// </summary>
+    [Parameter]
+    public EventCallback<Citation> OnCitationLoaded { get; set; }
+
+    private string _doiInput = "";
+    private bool _isLoading;
+    private bool _hasError;
+    private bool _lookupSuccess;
+    private string? _errorMessage;
+
+    private async Task LookupDoi()
+    {
+        if (string.IsNullOrWhiteSpace(_doiInput))
+            return;
+
+        _isLoading = true;
+        _hasError = false;
+        _lookupSuccess = false;
+        _errorMessage = null;
+        StateHasChanged();
+
+        try
+        {
+            var result = await DoiLookupService.LookupAsync(_doiInput);
+
+            if (result.Success && result.Citation != null)
+            {
+                _lookupSuccess = true;
+                await OnCitationLoaded.InvokeAsync(result.Citation);
+                _doiInput = ""; // Clear input on success
+            }
+            else
+            {
+                _hasError = true;
+                _errorMessage = result.ErrorMessage ?? "Unknown error occurred.";
+            }
+        }
+        catch (Exception ex)
+        {
+            _hasError = true;
+            _errorMessage = $"An error occurred: {ex.Message}";
+        }
+        finally
+        {
+            _isLoading = false;
+            StateHasChanged();
+        }
+    }
+
+    private async Task HandleKeyDown(KeyboardEventArgs e)
+    {
+        if (e.Key == "Enter" && !string.IsNullOrWhiteSpace(_doiInput) && !_isLoading)
+        {
+            await LookupDoi();
+        }
+    }
+}

@@ -53,13 +53,13 @@ public class UrlHealthService : IUrlHealthService
         {
             // In Blazor WASM, CORS errors appear as HttpRequestException with
             // messages like "TypeError: Failed to fetch" or similar network errors.
-            // These indicate the server responded but the browser blocked access.
+            // We can't verify if the server is actually healthy - browser blocked the response.
             if (IsCorsError(ex.Message))
             {
-                status.IsHealthy = true;
+                status.IsHealthy = false;  // Can't verify - don't claim healthy
                 status.IsCorsBlocked = true;
-                status.StatusCode = 200; // Assume success since server responded
-                status.ErrorMessage = "CORS policy blocked response (server likely OK)";
+                status.StatusCode = 0;
+                status.ErrorMessage = "Browser blocked response (CORS policy)";
             }
             else
             {
@@ -83,10 +83,10 @@ public class UrlHealthService : IUrlHealthService
             // Generic exceptions in WASM often indicate CORS issues
             if (IsCorsError(ex.Message))
             {
-                status.IsHealthy = true;
+                status.IsHealthy = false;  // Can't verify - don't claim healthy
                 status.IsCorsBlocked = true;
-                status.StatusCode = 200;
-                status.ErrorMessage = "CORS policy blocked response (server likely OK)";
+                status.StatusCode = 0;
+                status.ErrorMessage = "Browser blocked response (CORS policy)";
             }
             else
             {

@@ -6,7 +6,10 @@
     <div class="row g-3">
         <div class="col-12">
             <label for="title" class="form-label">Title <span class="text-danger">*</span></label>
-            <InputText id="title" @bind-Value="Citation.Title" class="form-control" placeholder="Enter the publication title" />
+            <input id="title" type="text" class="form-control"
+                   value="@Citation.Title"
+                   @oninput="HandleTitleInput"
+                   placeholder="Enter the publication title" />
             <ValidationMessage For="@(() => Citation.Title)" class="invalid-feedback d-block" />
         </div>
 
@@ -207,9 +210,11 @@
     [Parameter] public List<string> ValidationErrors { get; set; } = new();
     [Parameter] public EventCallback<Citation> OnSubmit { get; set; }
     [Parameter] public EventCallback OnCancel { get; set; }
+    [Parameter] public EventCallback<Citation> OnTitleChanged { get; set; }
 
     private List<Domain> _domains = new();
     private string _newTag = "";
+    private System.Timers.Timer? _titleDebounceTimer;
 
     protected override async Task OnInitializedAsync()
     {
@@ -273,5 +278,27 @@
         {
             AddTag();
         }
+    }
+
+    private void HandleTitleInput(ChangeEventArgs e)
+    {
+        Citation.Title = e.Value?.ToString() ?? string.Empty;
+
+        // Debounce the title change callback
+        _titleDebounceTimer?.Stop();
+        _titleDebounceTimer?.Dispose();
+        _titleDebounceTimer = new System.Timers.Timer(500);
+        _titleDebounceTimer.Elapsed += async (s, args) =>
+        {
+            _titleDebounceTimer?.Stop();
+            if (OnTitleChanged.HasDelegate)
+            {
+                await InvokeAsync(async () =>
+                {
+                    await OnTitleChanged.InvokeAsync(Citation);
+                });
+            }
+        };
+        _titleDebounceTimer.Start();
     }
 }

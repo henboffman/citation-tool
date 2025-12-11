@@ -3,6 +3,7 @@
 @page "/citations/{Id:guid}"
 @page "/citations/{Id:guid}/edit"
 @inject ICitationService CitationService
+@inject IDuplicateDetectionService DuplicateDetectionService
 @inject NavigationManager Navigation
 @inject IJSRuntime JS
 
@@ -37,10 +38,18 @@ else
             break;
 
         case PageMode.Create:
+            <DoiLookupPanel OnCitationLoaded="HandleDoiLookup" />
+
+            @if (_duplicates.Count > 0 && !_duplicatesDismissed)
+            {
+                <DuplicateWarning Duplicates="_duplicates" OnDismiss="DismissDuplicates" />
+            }
+
             <div class="card">
                 <div class="card-body">
                     <CitationForm Citation="_citation" IsEdit="false" IsSubmitting="_isSubmitting"
-                                  ValidationErrors="_validationErrors" OnSubmit="HandleCreate" OnCancel="GoToList" />
+                                  ValidationErrors="_validationErrors" OnSubmit="HandleCreate" OnCancel="GoToList"
+                                  OnTitleChanged="CheckForDuplicates" />
                 </div>
             </div>
             break;
@@ -246,10 +255,16 @@ else
         case PageMode.Edit:
             @if (_citation != null)
             {
+                @if (_duplicates.Count > 0 && !_duplicatesDismissed)
+                {
+                    <DuplicateWarning Duplicates="_duplicates" OnDismiss="DismissDuplicates" ShowAddAnyway="false" />
+                }
+
                 <div class="card">
                     <div class="card-body">
                         <CitationForm Citation="_citation" IsEdit="true" IsSubmitting="_isSubmitting"
-                                      ValidationErrors="_validationErrors" OnSubmit="HandleUpdate" OnCancel="() => GoToDetail(_citation.Id)" />
+                                      ValidationErrors="_validationErrors" OnSubmit="HandleUpdate" OnCancel="() => GoToDetail(_citation.Id)"
+                                      OnTitleChanged="CheckForDuplicates" />
                     </div>
                 </div>
             }
@@ -269,6 +284,8 @@ else
     private bool _copySuccess;
     private List<string> _validationErrors = new();
     private ConfirmDialog? _confirmDialog;
+    private List<DuplicateMatch> _duplicates = new();
+    private bool _duplicatesDismissed;
 
     protected override async Task OnParametersSetAsync()
     {
@@ -390,6 +407,50 @@ else
 
     private void GoToList() => Navigation.NavigateTo("/citations");
     private void GoToDetail(Guid id) => Navigation.NavigateTo($"/citations/{id}");
+
+    private async Task HandleDoiLookup(Citation citation)
+    {
+        // Copy the lookup data to the current citation
+        _citation.Title = citation.Title;
+        _citation.Authors = citation.Authors;
+        _citation.Type = citation.Type;
+        _citation.Year = citation.Year;
+        _citation.Month = citation.Month;
+        _citation.JournalOrConference = citation.JournalOrConference;
+        _citation.Volume = citation.Volume;
+        _citation.Issue = citation.Issue;
+        _citation.Pages = citation.Pages;
+        _citation.Publisher = citation.Publisher;
+        _citation.Doi = citation.Doi;
+        _citation.Url = citation.Url;
+        _citation.Abstract = citation.Abstract;
+        _citation.Isbn = citation.Isbn;
+
+        // Check for duplicates
+        _duplicatesDismissed = false;
+        _duplicates = await DuplicateDetectionService.FindDuplicatesAsync(_citation);
+
+        StateHasChanged();
+    }
+
+    private void DismissDuplicates()
+    {
+        _duplicatesDismissed = true;
+    }
+
+    private async Task CheckForDuplicates(Citation citation)
+    {
+        if (string.IsNullOrWhiteSpace(citation.Title) || citation.Title.Length < 10)
+        {
+            // Don't check for very short titles
+            _duplicates.Clear();
+            return;
+        }
+
+        _duplicatesDismissed = false;
+        _duplicates = await DuplicateDetectionService.FindDuplicatesAsync(citation, citation.Id);
+        StateHasChanged();
+    }
 
     private async Task CopyCitation(CitationFormat format)
     {

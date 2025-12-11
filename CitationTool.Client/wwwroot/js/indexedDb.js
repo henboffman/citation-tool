@@ -1,6 +1,6 @@
 // IndexedDB wrapper for Citation Tool
 const DB_NAME = 'CitationToolDB';
-const DB_VERSION = 1;
+const DB_VERSION = 2; // Incremented for savedSearches store
 
 let db = null;
 
@@ -63,6 +63,14 @@ async function openDatabase() {
             // Settings store
             if (!database.objectStoreNames.contains('settings')) {
                 database.createObjectStore('settings', { keyPath: 'key' });
+            }
+
+            // Saved searches store (added in v2)
+            if (!database.objectStoreNames.contains('savedSearches')) {
+                const savedSearchesStore = database.createObjectStore('savedSearches', { keyPath: 'id' });
+                savedSearchesStore.createIndex('name', 'name', { unique: false });
+                savedSearchesStore.createIndex('dateCreated', 'dateCreated', { unique: false });
+                savedSearchesStore.createIndex('lastUsed', 'lastUsed', { unique: false });
             }
         };
     });
@@ -181,15 +189,21 @@ window.indexedDbInterop = {
         const data = {
             citations: [],
             domains: [],
+            savedSearches: [],
             settings: [],
             exportDate: new Date().toISOString(),
             version: DB_VERSION
         };
 
-        const storeNames = ['citations', 'domains', 'settings'];
+        const storeNames = ['citations', 'domains', 'savedSearches', 'settings'];
 
         for (const storeName of storeNames) {
-            data[storeName] = await this.getAll(storeName);
+            try {
+                data[storeName] = await this.getAll(storeName);
+            } catch (e) {
+                // Store might not exist in older versions
+                data[storeName] = [];
+            }
         }
 
         return data;
@@ -201,6 +215,11 @@ window.indexedDbInterop = {
         // Clear existing data
         await this.clear('citations');
         await this.clear('domains');
+        try {
+            await this.clear('savedSearches');
+        } catch (e) {
+            // Store might not exist
+        }
 
         // Import new data
         if (data.domains && data.domains.length > 0) {
@@ -209,6 +228,10 @@ window.indexedDbInterop = {
 
         if (data.citations && data.citations.length > 0) {
             await this.bulkAdd('citations', data.citations);
+        }
+
+        if (data.savedSearches && data.savedSearches.length > 0) {
+            await this.bulkAdd('savedSearches', data.savedSearches);
         }
 
         return true;

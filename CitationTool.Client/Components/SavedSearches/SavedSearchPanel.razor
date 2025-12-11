@@ -1,0 +1,293 @@
+@inject ISavedSearchService SavedSearchService
+
+<div class="saved-searches-panel">
+    @if (_savedSearches.Count > 0 || ShowSaveButton)
+    {
+        <div class="d-flex align-items-center justify-content-between mb-2">
+            <h6 class="mb-0 text-muted small text-uppercase fw-semibold">
+                <i class="bi bi-bookmark-star me-1"></i>
+                Saved Searches
+            </h6>
+            @if (ShowSaveButton && CurrentFilters?.HasActiveFilters == true)
+            {
+                <button type="button"
+                        class="btn btn-sm btn-outline-primary"
+                        @onclick="OpenSaveDialog"
+                        title="Save current search">
+                    <i class="bi bi-plus-lg me-1"></i>
+                    Save
+                </button>
+            }
+        </div>
+
+        @if (_savedSearches.Count > 0)
+        {
+            <div class="list-group list-group-flush saved-search-list">
+                @foreach (var search in _savedSearches)
+                {
+                    <button type="button"
+                            class="list-group-item list-group-item-action d-flex align-items-center py-2 @(IsActive(search) ? "active" : "")"
+                            @onclick="() => ApplySearch(search)"
+                            title="@(search.Description ?? search.FilterSummary)">
+                        <div class="flex-grow-1 text-start">
+                            <div class="d-flex align-items-center">
+                                @if (search.IsPinned)
+                                {
+                                    <i class="bi bi-pin-fill me-1 text-primary" style="font-size: 0.7rem;"></i>
+                                }
+                                <span class="fw-medium small">@search.Name</span>
+                            </div>
+                            <div class="text-muted" style="font-size: 0.7rem;">
+                                @search.FilterSummary
+                            </div>
+                        </div>
+                        <div class="btn-group btn-group-sm ms-2" role="group">
+                            <button type="button"
+                                    class="btn btn-link p-0 px-1 @(search.IsPinned ? "text-primary" : "text-muted")"
+                                    @onclick:stopPropagation="true"
+                                    @onclick="() => TogglePin(search)"
+                                    title="@(search.IsPinned ? "Unpin" : "Pin to top")">
+                                <i class="bi @(search.IsPinned ? "bi-pin-fill" : "bi-pin")"></i>
+                            </button>
+                            <button type="button"
+                                    class="btn btn-link p-0 px-1 text-danger"
+                                    @onclick:stopPropagation="true"
+                                    @onclick="() => DeleteSearch(search)"
+                                    title="Delete saved search">
+                                <i class="bi bi-trash"></i>
+                            </button>
+                        </div>
+                    </button>
+                }
+            </div>
+        }
+        else if (ShowSaveButton)
+        {
+            <p class="text-muted small mb-0">
+                No saved searches yet. Apply filters and click "Save" to create one.
+            </p>
+        }
+    }
+</div>
+
+@* Save Search Dialog *@
+@if (_showSaveDialog)
+{
+    <div class="modal fade show d-block" tabindex="-1" role="dialog" aria-labelledby="saveSearchModalLabel" aria-modal="true">
+        <div class="modal-backdrop fade show" @onclick="CloseSaveDialog"></div>
+        <div class="modal-dialog modal-dialog-centered" role="document">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="saveSearchModalLabel">
+                        <i class="bi bi-bookmark-plus me-2"></i>
+                        Save Search
+                    </h5>
+                    <button type="button" class="btn-close" @onclick="CloseSaveDialog" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                    <div class="mb-3">
+                        <label for="searchName" class="form-label">Name <span class="text-danger">*</span></label>
+                        <input type="text"
+                               class="form-control @(_nameError != null ? "is-invalid" : "")"
+                               id="searchName"
+                               @bind="_newSearchName"
+                               @bind:event="oninput"
+                               placeholder="e.g., Security papers 2023+"
+                               maxlength="50" />
+                        @if (_nameError != null)
+                        {
+                            <div class="invalid-feedback">@_nameError</div>
+                        }
+                    </div>
+                    <div class="mb-3">
+                        <label for="searchDescription" class="form-label">Description (optional)</label>
+                        <textarea class="form-control"
+                                  id="searchDescription"
+                                  @bind="_newSearchDescription"
+                                  rows="2"
+                                  placeholder="Brief description of what this search finds..."
+                                  maxlength="200"></textarea>
+                    </div>
+                    <div class="alert alert-info small mb-0" role="alert">
+                        <i class="bi bi-info-circle me-1"></i>
+                        <strong>Current filters:</strong> @(CurrentFilters?.HasActiveFilters == true ? GetFilterSummary() : "No filters")
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" @onclick="CloseSaveDialog">Cancel</button>
+                    <button type="button"
+                            class="btn btn-primary"
+                            @onclick="SaveSearch"
+                            disabled="@_isSaving">
+                        @if (_isSaving)
+                        {
+                            <span class="spinner-border spinner-border-sm me-1" role="status" aria-hidden="true"></span>
+                        }
+                        <i class="bi bi-check-lg me-1"></i>
+                        Save Search
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+}
+
+@code {
+    /// <summary>
+    /// The current filter options (used to save a new search).
+    /// </summary>
+    [Parameter]
+    public FilterOptions? CurrentFilters { get; set; }
+
+    /// <summary>
+    /// Name of the current domain (for display in saved search).
+    /// </summary>
+    [Parameter]
+    public string? CurrentDomainName { get; set; }
+
+    /// <summary>
+    /// Whether to show the save button when filters are active.
+    /// </summary>
+    [Parameter]
+    public bool ShowSaveButton { get; set; } = true;
+
+    /// <summary>
+    /// Callback when a saved search is applied.
+    /// </summary>
+    [Parameter]
+    public EventCallback<SavedSearch> OnSearchApplied { get; set; }
+
+    /// <summary>
+    /// The currently active saved search (for highlighting).
+    /// </summary>
+    [Parameter]
+    public Guid? ActiveSearchId { get; set; }
+
+    private List<SavedSearch> _savedSearches = new();
+    private bool _showSaveDialog;
+    private string _newSearchName = "";
+    private string _newSearchDescription = "";
+    private string? _nameError;
+    private bool _isSaving;
+
+    protected override async Task OnInitializedAsync()
+    {
+        await LoadSavedSearches();
+    }
+
+    private async Task LoadSavedSearches()
+    {
+        _savedSearches = await SavedSearchService.GetAllAsync();
+    }
+
+    private bool IsActive(SavedSearch search)
+    {
+        return ActiveSearchId.HasValue && ActiveSearchId.Value == search.Id;
+    }
+
+    private async Task ApplySearch(SavedSearch search)
+    {
+        await SavedSearchService.RecordUsageAsync(search.Id);
+        await OnSearchApplied.InvokeAsync(search);
+    }
+
+    private async Task TogglePin(SavedSearch search)
+    {
+        await SavedSearchService.TogglePinAsync(search.Id);
+        await LoadSavedSearches();
+    }
+
+    private async Task DeleteSearch(SavedSearch search)
+    {
+        await SavedSearchService.DeleteAsync(search.Id);
+        await LoadSavedSearches();
+    }
+
+    private void OpenSaveDialog()
+    {
+        _newSearchName = "";
+        _newSearchDescription = "";
+        _nameError = null;
+        _showSaveDialog = true;
+    }
+
+    private void CloseSaveDialog()
+    {
+        _showSaveDialog = false;
+    }
+
+    private async Task SaveSearch()
+    {
+        // Validate name
+        if (string.IsNullOrWhiteSpace(_newSearchName))
+        {
+            _nameError = "Name is required.";
+            return;
+        }
+
+        if (_newSearchName.Length > 50)
+        {
+            _nameError = "Name must be 50 characters or less.";
+            return;
+        }
+
+        // Check for duplicate name
+        if (_savedSearches.Any(s => s.Name.Equals(_newSearchName.Trim(), StringComparison.OrdinalIgnoreCase)))
+        {
+            _nameError = "A saved search with this name already exists.";
+            return;
+        }
+
+        _nameError = null;
+        _isSaving = true;
+
+        try
+        {
+            if (CurrentFilters != null)
+            {
+                await SavedSearchService.CreateAsync(
+                    _newSearchName,
+                    CurrentFilters,
+                    string.IsNullOrWhiteSpace(_newSearchDescription) ? null : _newSearchDescription);
+
+                await LoadSavedSearches();
+                CloseSaveDialog();
+            }
+        }
+        finally
+        {
+            _isSaving = false;
+        }
+    }
+
+    private string GetFilterSummary()
+    {
+        if (CurrentFilters == null) return "No filters";
+
+        var parts = new List<string>();
+
+        if (!string.IsNullOrEmpty(CurrentFilters.SearchTerm))
+            parts.Add($"\"{CurrentFilters.SearchTerm}\"");
+
+        if (CurrentFilters.DomainId.HasValue && !string.IsNullOrEmpty(CurrentDomainName))
+            parts.Add($"in {CurrentDomainName}");
+
+        if (CurrentFilters.Types.Count > 0)
+            parts.Add($"{CurrentFilters.Types.Count} type(s)");
+
+        if (CurrentFilters.YearFrom.HasValue || CurrentFilters.YearTo.HasValue)
+        {
+            if (CurrentFilters.YearFrom.HasValue && CurrentFilters.YearTo.HasValue)
+                parts.Add($"{CurrentFilters.YearFrom}-{CurrentFilters.YearTo}");
+            else if (CurrentFilters.YearFrom.HasValue)
+                parts.Add($"from {CurrentFilters.YearFrom}");
+            else
+                parts.Add($"until {CurrentFilters.YearTo}");
+        }
+
+        if (CurrentFilters.Tags.Count > 0)
+            parts.Add($"{CurrentFilters.Tags.Count} tag(s)");
+
+        return parts.Count > 0 ? string.Join(", ", parts) : "No filters";
+    }
+}
