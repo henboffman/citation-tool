@@ -166,9 +166,9 @@ public partial class BibTexParserService : IBibTexParserService
             .Replace("\\\"u", "ü")
             .Replace("\\~n", "ñ")
             .Replace("\\c{c}", "ç")
-            .Replace("--", "–")
-            .Replace("``", """)
-            .Replace("''", """)
+            .Replace("--", "\u2013")
+            .Replace("``", "\u201C")
+            .Replace("''", "\u201D")
             .Replace("\\&", "&")
             .Replace("\\%", "%");
 
