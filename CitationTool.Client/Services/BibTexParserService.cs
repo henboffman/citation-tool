@@ -156,21 +156,21 @@ public partial class BibTexParserService : IBibTexParserService
 
         // Handle LaTeX special characters
         value = value
-            .Replace(@"\'e", "é")
-            .Replace(@"\'a", "á")
-            .Replace(@"\'i", "í")
-            .Replace(@"\'o", "ó")
-            .Replace(@"\'u", "ú")
-            .Replace(@"\""a", "ä")
-            .Replace(@"\""o", "ö")
-            .Replace(@"\""u", "ü")
-            .Replace(@"\~n", "ñ")
-            .Replace(@"\c{c}", "ç")
-            .Replace(@"--", "–")
-            .Replace(@"``", """)
-            .Replace(@"''", """)
-            .Replace(@"\&", "&")
-            .Replace(@"\%", "%");
+            .Replace("\\'e", "é")
+            .Replace("\\'a", "á")
+            .Replace("\\'i", "í")
+            .Replace("\\'o", "ó")
+            .Replace("\\'u", "ú")
+            .Replace("\\\"a", "ä")
+            .Replace("\\\"o", "ö")
+            .Replace("\\\"u", "ü")
+            .Replace("\\~n", "ñ")
+            .Replace("\\c{c}", "ç")
+            .Replace("--", "–")
+            .Replace("``", """)
+            .Replace("''", """)
+            .Replace("\\&", "&")
+            .Replace("\\%", "%");
 
         return value;
     }
