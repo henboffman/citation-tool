@@ -31,6 +31,7 @@ builder.Services.AddScoped<IUrlHealthService, UrlHealthService>();
 builder.Services.AddScoped<IDoiLookupService, DoiLookupService>();
 builder.Services.AddScoped<IDuplicateDetectionService, DuplicateDetectionService>();
 builder.Services.AddScoped<ISavedSearchService, SavedSearchService>();
+builder.Services.AddScoped<IBibTexParserService, BibTexParserService>();
 builder.Services.AddScoped<SeedDataService>();
 
 // Validators

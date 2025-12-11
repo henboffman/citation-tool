@@ -19,9 +19,9 @@
     </div>
     @if (_mode == PageMode.List)
     {
-        <a href="/citations/new" class="btn btn-primary">
+        <button type="button" class="btn btn-primary" @onclick="GoToCreate">
             <i class="bi bi-plus-lg me-2"></i>Add Citation
-        </a>
+        </button>
     }
 </div>
 
@@ -38,7 +38,14 @@ else
             break;
 
         case PageMode.Create:
-            <DoiLookupPanel OnCitationLoaded="HandleDoiLookup" />
+            <div class="row mb-4">
+                <div class="col-md-6">
+                    <DoiLookupPanel OnCitationLoaded="HandleDoiLookup" />
+                </div>
+                <div class="col-md-6">
+                    <BibTexImportPanel OnCitationLoaded="HandleBibTexImport" />
+                </div>
+            </div>
 
             @if (_duplicates.Count > 0 && !_duplicatesDismissed)
             {
@@ -406,6 +413,7 @@ else
     }
 
     private void GoToList() => Navigation.NavigateTo("/citations");
+    private void GoToCreate() => Navigation.NavigateTo("/citations/new");
     private void GoToDetail(Guid id) => Navigation.NavigateTo($"/citations/{id}");
 
     private async Task HandleDoiLookup(Citation citation)
@@ -425,6 +433,33 @@ else
         _citation.Url = citation.Url;
         _citation.Abstract = citation.Abstract;
         _citation.Isbn = citation.Isbn;
+
+        // Check for duplicates
+        _duplicatesDismissed = false;
+        _duplicates = await DuplicateDetectionService.FindDuplicatesAsync(_citation);
+
+        StateHasChanged();
+    }
+
+    private async Task HandleBibTexImport(Citation citation)
+    {
+        // Copy the parsed BibTeX data to the current citation
+        _citation.Title = citation.Title;
+        _citation.Authors = new List<string>(citation.Authors);
+        _citation.Type = citation.Type;
+        _citation.Year = citation.Year;
+        _citation.Month = citation.Month;
+        _citation.JournalOrConference = citation.JournalOrConference;
+        _citation.Volume = citation.Volume;
+        _citation.Issue = citation.Issue;
+        _citation.Pages = citation.Pages;
+        _citation.Publisher = citation.Publisher;
+        _citation.Doi = citation.Doi;
+        _citation.Url = citation.Url;
+        _citation.Abstract = citation.Abstract;
+        _citation.Isbn = citation.Isbn;
+        _citation.Notes = citation.Notes;
+        _citation.Tags = new List<string>(citation.Tags);
 
         // Check for duplicates
         _duplicatesDismissed = false;

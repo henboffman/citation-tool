@@ -43,13 +43,12 @@ public partial class DoiLookupService : IDoiLookupService
 
         try
         {
-            var url = $"{CrossRefApiBase}{Uri.EscapeDataString(normalizedDoi)}";
+            // Use mailto parameter for polite API usage (recommended by CrossRef)
+            var url = $"{CrossRefApiBase}{Uri.EscapeDataString(normalizedDoi)}?mailto=citation-tool@example.com";
 
-            using var request = new HttpRequestMessage(HttpMethod.Get, url);
-            request.Headers.Add("User-Agent", "CitationManager/1.0 (https://github.com/citation-tool; mailto:)");
-            request.Headers.Add("Accept", "application/json");
-
-            var response = await _httpClient.SendAsync(request);
+            // Note: Browser CORS restrictions prevent setting User-Agent header
+            // CrossRef recommends using mailto query param instead for browser apps
+            var response = await _httpClient.GetAsync(url);
 
             if (response.StatusCode == System.Net.HttpStatusCode.NotFound)
             {

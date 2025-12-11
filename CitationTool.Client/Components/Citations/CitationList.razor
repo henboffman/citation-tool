@@ -112,7 +112,7 @@
             {
                 <EmptyState Icon="bi-journal-text" Title="No citations yet"
                             Message="Start by adding your first citation."
-                            ActionText="Add Citation" ActionUrl="/citations/new" ActionIcon="bi-plus-lg" />
+                            ActionText="Add Citation" OnAction="GoToCreate" ActionIcon="bi-plus-lg" />
             }
         }
         else
@@ -277,5 +277,10 @@
     {
         _activeSearchId = null;
         await ClearFilters();
+    }
+
+    private void GoToCreate()
+    {
+        Navigation.NavigateTo("/citations/new");
     }
 }
