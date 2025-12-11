@@ -35,14 +35,23 @@ async function openDatabase() {
     return new Promise((resolve, reject) => {
         const request = indexedDB.open(DB_NAME, DB_VERSION);
 
-        request.onerror = () => reject(request.error);
+        request.onerror = (event) => {
+            console.error('IndexedDB error:', event.target.error);
+            reject(request.error);
+        };
+
         request.onsuccess = () => {
             db = request.result;
             resolve(db);
         };
 
+        request.onblocked = () => {
+            console.warn('IndexedDB upgrade blocked. Please close other tabs with this app.');
+        };
+
         request.onupgradeneeded = (event) => {
             const database = event.target.result;
+            console.log('Upgrading IndexedDB from version', event.oldVersion, 'to', event.newVersion);
 
             // Citations store
             if (!database.objectStoreNames.contains('citations')) {
@@ -72,6 +81,8 @@ async function openDatabase() {
                 savedSearchesStore.createIndex('dateCreated', 'dateCreated', { unique: false });
                 savedSearchesStore.createIndex('lastUsed', 'lastUsed', { unique: false });
             }
+
+            console.log('IndexedDB upgrade complete');
         };
     });
 }
