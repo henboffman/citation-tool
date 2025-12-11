@@ -1,0 +1,256 @@
+@page "/export"
+@inject ICitationService CitationService
+@inject IDomainService DomainService
+@inject IImportExportService ImportExportService
+@inject IJSRuntime JS
+
+<PageTitle>Export Citations - Citation Manager</PageTitle>
+
+<div class="row mb-4">
+    <div class="col-12">
+        <h1 class="h3 mb-1">Export Citations</h1>
+        <p class="text-muted mb-0">Export your citations to CSV, JSON, or BibTeX format</p>
+    </div>
+</div>
+
+<div class="row">
+    <div class="col-lg-8">
+        <div class="card mb-4">
+            <div class="card-header">
+                <h5 class="mb-0">
+                    <i class="bi bi-download me-2"></i>Export Options
+                </h5>
+            </div>
+            <div class="card-body">
+                <div class="mb-3">
+                    <label for="exportFormat" class="form-label">Export Format</label>
+                    <select id="exportFormat" class="form-select" @bind="_selectedFormat">
+                        <option value="@ExportFormat.Csv">CSV (Comma-Separated Values)</option>
+                        <option value="@ExportFormat.Json">JSON</option>
+                        <option value="@ExportFormat.BibTeX">BibTeX</option>
+                    </select>
+                </div>
+
+                <div class="mb-3">
+                    <label for="domainFilter" class="form-label">Filter by Domain</label>
+                    <select id="domainFilter" class="form-select" @bind="_selectedDomainId">
+                        <option value="">All Domains (@_allCitations.Count citations)</option>
+                        @foreach (var domain in _domains)
+                        {
+                            var count = _allCitations.Count(c => c.DomainId == domain.Id);
+                            <option value="@domain.Id">@domain.Name (@count citations)</option>
+                        }
+                    </select>
+                </div>
+
+                <div class="mb-3">
+                    <label class="form-label">Filter by Type</label>
+                    <div class="d-flex flex-wrap gap-3">
+                        @foreach (var type in Enum.GetValues<CitationType>())
+                        {
+                            <div class="form-check">
+                                <input type="checkbox" class="form-check-input" id="type_@type"
+                                       checked="@_selectedTypes.Contains(type)"
+                                       @onchange="e => ToggleType(type, (bool)(e.Value ?? false))" />
+                                <label class="form-check-label small" for="type_@type">@type.GetDisplayName()</label>
+                            </div>
+                        }
+                    </div>
+                </div>
+
+                <hr />
+
+                <div class="d-flex justify-content-between align-items-center">
+                    <span class="text-muted">
+                        <strong>@GetFilteredCitations().Count()</strong> citations will be exported
+                    </span>
+                    <button class="btn btn-primary" @onclick="ExportCitations" disabled="@(_isExporting || GetFilteredCitations().Count() == 0)">
+                        @if (_isExporting)
+                        {
+                            <span class="spinner-border spinner-border-sm me-2" role="status" aria-hidden="true"></span>
+                            <text>Exporting</text>
+                        }
+                        else
+                        {
+                            <i class="bi bi-download me-2"></i>
+                            <text>Export to </text>@(_selectedFormat.ToString())
+                        }
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        @if (!string.IsNullOrEmpty(_exportPreview))
+        {
+            <div class="card">
+                <div class="card-header d-flex justify-content-between align-items-center">
+                    <h5 class="mb-0">Export Preview</h5>
+                    <button class="btn btn-sm btn-outline-secondary" @onclick="DownloadExport">
+                        <i class="bi bi-download me-1"></i>Download File
+                    </button>
+                </div>
+                <div class="card-body">
+                    <pre class="bg-light p-3 rounded small" style="max-height: 400px; overflow-y: auto;">@_exportPreview</pre>
+                </div>
+            </div>
+        }
+    </div>
+
+    <div class="col-lg-4">
+        <div class="card mb-4">
+            <div class="card-header">
+                <h5 class="mb-0">Export Statistics</h5>
+            </div>
+            <div class="card-body">
+                <dl class="row mb-0">
+                    <dt class="col-7 text-muted">Total Citations</dt>
+                    <dd class="col-5 text-end">@_allCitations.Count</dd>
+                    <dt class="col-7 text-muted">Selected for Export</dt>
+                    <dd class="col-5 text-end">@GetFilteredCitations().Count()</dd>
+                    <dt class="col-7 text-muted">Domains</dt>
+                    <dd class="col-5 text-end">@_domains.Count</dd>
+                </dl>
+            </div>
+        </div>
+
+        <div class="card">
+            <div class="card-header">
+                <h5 class="mb-0">Format Info</h5>
+            </div>
+            <div class="card-body">
+                @switch (_selectedFormat)
+                {
+                    case ExportFormat.Csv:
+                        <p class="small text-muted mb-2">
+                            <strong>CSV</strong> is ideal for spreadsheet applications like Excel or Google Sheets.
+                        </p>
+                        <p class="small text-muted mb-0">
+                            All citation fields will be included as columns.
+                        </p>
+                        break;
+
+                    case ExportFormat.Json:
+                        <p class="small text-muted mb-2">
+                            <strong>JSON</strong> is best for programmatic use or re-importing into this application.
+                        </p>
+                        <p class="small text-muted mb-0">
+                            The output is a structured array of citation objects.
+                        </p>
+                        break;
+
+                    case ExportFormat.BibTeX:
+                        <p class="small text-muted mb-2">
+                            <strong>BibTeX</strong> is the standard format for academic citation management.
+                        </p>
+                        <p class="small text-muted mb-0">
+                            Compatible with LaTeX, Overleaf, and most reference managers.
+                        </p>
+                        break;
+                }
+            </div>
+        </div>
+    </div>
+</div>
+
+@code {
+    private ExportFormat _selectedFormat = ExportFormat.Csv;
+    private string _selectedDomainId = "";
+    private List<CitationType> _selectedTypes = new();
+    private List<Citation> _allCitations = new();
+    private List<Domain> _domains = new();
+    private bool _isExporting;
+    private string _exportPreview = "";
+    private string _exportContent = "";
+
+    protected override async Task OnInitializedAsync()
+    {
+        _allCitations = await CitationService.GetAllAsync();
+        _domains = await DomainService.GetAllAsync();
+    }
+
+    private IEnumerable<Citation> GetFilteredCitations()
+    {
+        var query = _allCitations.AsEnumerable();
+
+        if (!string.IsNullOrEmpty(_selectedDomainId) && Guid.TryParse(_selectedDomainId, out var domainId))
+        {
+            query = query.Where(c => c.DomainId == domainId);
+        }
+
+        if (_selectedTypes.Count > 0)
+        {
+            query = query.Where(c => _selectedTypes.Contains(c.Type));
+        }
+
+        return query;
+    }
+
+    private void ToggleType(CitationType type, bool isChecked)
+    {
+        if (isChecked && !_selectedTypes.Contains(type))
+        {
+            _selectedTypes.Add(type);
+        }
+        else if (!isChecked)
+        {
+            _selectedTypes.Remove(type);
+        }
+    }
+
+    private async Task ExportCitations()
+    {
+        _isExporting = true;
+        _exportPreview = "";
+        _exportContent = "";
+
+        try
+        {
+            var citations = GetFilteredCitations().ToList();
+
+            _exportContent = _selectedFormat switch
+            {
+                ExportFormat.Csv => await ImportExportService.ExportCsvAsync(citations),
+                ExportFormat.Json => await ImportExportService.ExportJsonAsync(citations),
+                ExportFormat.BibTeX => await ImportExportService.ExportBibTeXAsync(citations),
+                _ => ""
+            };
+
+            _exportPreview = _exportContent.Length > 5000
+                ? _exportContent.Substring(0, 5000) + "\n\n... (truncated for preview)"
+                : _exportContent;
+        }
+        finally
+        {
+            _isExporting = false;
+        }
+    }
+
+    private async Task DownloadExport()
+    {
+        if (string.IsNullOrEmpty(_exportContent)) return;
+
+        var fileName = $"citations_{DateTime.Now:yyyyMMdd_HHmmss}";
+        var mimeType = "text/plain";
+
+        switch (_selectedFormat)
+        {
+            case ExportFormat.Csv:
+                fileName += ".csv";
+                mimeType = "text/csv";
+                break;
+            case ExportFormat.Json:
+                fileName += ".json";
+                mimeType = "application/json";
+                break;
+            case ExportFormat.BibTeX:
+                fileName += ".bib";
+                mimeType = "application/x-bibtex";
+                break;
+        }
+
+        var bytes = System.Text.Encoding.UTF8.GetBytes(_exportContent);
+        var base64 = Convert.ToBase64String(bytes);
+
+        await JS.InvokeVoidAsync("downloadFile", mimeType, base64, fileName);
+    }
+}

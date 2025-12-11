@@ -1,0 +1,99 @@
+@if (_isVisible)
+{
+    <div class="modal fade show d-block" tabindex="-1" role="dialog" aria-modal="true" aria-labelledby="confirmDialogTitle">
+        <div class="modal-backdrop fade show" @onclick="Cancel"></div>
+        <div class="modal-dialog modal-dialog-centered" role="document">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="confirmDialogTitle">
+                        @if (!string.IsNullOrEmpty(Icon))
+                        {
+                            <i class="bi @Icon me-2"></i>
+                        }
+                        @Title
+                    </h5>
+                    <button type="button" class="btn-close" @onclick="Cancel" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                    <p>@Message</p>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" @onclick="Cancel">
+                        @CancelText
+                    </button>
+                    <button type="button" class="btn @ConfirmButtonClass" @onclick="Confirm">
+                        @ConfirmText
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+}
+
+@code {
+    private bool _isVisible;
+    private TaskCompletionSource<bool>? _tcs;
+
+    [Parameter] public string Title { get; set; } = "Confirm";
+    [Parameter] public string Message { get; set; } = "Are you sure?";
+    [Parameter] public string ConfirmText { get; set; } = "Confirm";
+    [Parameter] public string CancelText { get; set; } = "Cancel";
+    [Parameter] public string Icon { get; set; } = "bi-question-circle";
+    [Parameter] public ConfirmType Type { get; set; } = ConfirmType.Default;
+
+    private string ConfirmButtonClass => Type switch
+    {
+        ConfirmType.Danger => "btn-danger",
+        ConfirmType.Warning => "btn-warning",
+        ConfirmType.Success => "btn-success",
+        _ => "btn-primary"
+    };
+
+    public Task<bool> ShowAsync(string message, string? title = null, ConfirmType type = ConfirmType.Default)
+    {
+        Message = message;
+        Title = title ?? "Confirm";
+        Type = type;
+        Icon = type switch
+        {
+            ConfirmType.Danger => "bi-exclamation-triangle-fill text-danger",
+            ConfirmType.Warning => "bi-exclamation-circle-fill text-warning",
+            ConfirmType.Success => "bi-check-circle-fill text-success",
+            _ => "bi-question-circle"
+        };
+
+        _tcs = new TaskCompletionSource<bool>();
+        _isVisible = true;
+        StateHasChanged();
+
+        return _tcs.Task;
+    }
+
+    public Task<bool> ShowDeleteAsync(string itemName) =>
+        ShowAsync(
+            $"Are you sure you want to delete \"{itemName}\"? This action cannot be undone.",
+            "Delete Confirmation",
+            ConfirmType.Danger);
+
+    private void Confirm()
+    {
+        _isVisible = false;
+        _tcs?.SetResult(true);
+        StateHasChanged();
+    }
+
+    private void Cancel()
+    {
+        _isVisible = false;
+        _tcs?.SetResult(false);
+        StateHasChanged();
+    }
+
+    public enum ConfirmType
+    {
+        Default,
+        Danger,
+        Warning,
+        Success
+    }
+}

@@ -1,0 +1,237 @@
+@inject ICitationService CitationService
+@inject IDomainService DomainService
+@inject IJSRuntime JS
+@inject NavigationManager Navigation
+
+<div class="row">
+    <div class="col-lg-3 col-md-4 mb-4">
+        <div class="filter-panel sticky-top" style="top: 1rem;">
+            <h6 class="fw-bold mb-3">
+                <i class="bi bi-funnel me-2"></i>Filters
+            </h6>
+
+            <div class="mb-3">
+                <label for="searchFilter" class="form-label small">Search</label>
+                <div class="input-group input-group-sm">
+                    <span class="input-group-text"><i class="bi bi-search"></i></span>
+                    <input type="text" id="searchFilter" class="form-control"
+                           @bind="_filterOptions.SearchTerm" @bind:event="oninput"
+                           @onkeyup="HandleSearchKeyUp" placeholder="Title, author, DOI..." />
+                </div>
+            </div>
+
+            <div class="mb-3">
+                <label for="domainFilter" class="form-label small">Domain</label>
+                <select id="domainFilter" class="form-select form-select-sm" @bind="_selectedDomainId" @bind:after="ApplyFilters">
+                    <option value="">All Domains</option>
+                    @foreach (var domain in _domains)
+                    {
+                        <option value="@domain.Id">@domain.Name</option>
+                    }
+                </select>
+            </div>
+
+            <div class="mb-3">
+                <label class="form-label small">Citation Type</label>
+                @foreach (var type in Enum.GetValues<CitationType>())
+                {
+                    <div class="form-check">
+                        <input type="checkbox" class="form-check-input" id="type_@type"
+                               checked="@_filterOptions.Types.Contains(type)"
+                               @onchange="e => ToggleTypeFilter(type, (bool)(e.Value ?? false))" />
+                        <label class="form-check-label small" for="type_@type">@type.GetDisplayName()</label>
+                    </div>
+                }
+            </div>
+
+            <div class="mb-3">
+                <label class="form-label small">Year Range</label>
+                <div class="row g-2">
+                    <div class="col-6">
+                        <input type="number" class="form-control form-control-sm" placeholder="From"
+                               @bind="_filterOptions.YearFrom" @bind:after="ApplyFilters" />
+                    </div>
+                    <div class="col-6">
+                        <input type="number" class="form-control form-control-sm" placeholder="To"
+                               @bind="_filterOptions.YearTo" @bind:after="ApplyFilters" />
+                    </div>
+                </div>
+            </div>
+
+            @if (_filterOptions.HasActiveFilters)
+            {
+                <button class="btn btn-outline-secondary btn-sm w-100" @onclick="ClearFilters">
+                    <i class="bi bi-x-lg me-1"></i>Clear Filters
+                </button>
+            }
+        </div>
+    </div>
+
+    <div class="col-lg-9 col-md-8">
+        <div class="d-flex justify-content-between align-items-center mb-3">
+            <div>
+                <span class="text-muted">@_filteredCitations.Count citation(s)</span>
+            </div>
+            <div class="d-flex gap-2">
+                <select class="form-select form-select-sm" style="width: auto;"
+                        @bind="_filterOptions.SortBy" @bind:after="ApplyFilters">
+                    @foreach (var field in Enum.GetValues<SortField>())
+                    {
+                        <option value="@field">@field.GetDisplayName()</option>
+                    }
+                </select>
+                <button class="btn btn-outline-secondary btn-sm" @onclick="ToggleSortDirection"
+                        title="@(_filterOptions.SortDescending ? "Descending" : "Ascending")">
+                    <i class="bi @(_filterOptions.SortDescending ? "bi-sort-down" : "bi-sort-up")"></i>
+                </button>
+            </div>
+        </div>
+
+        @if (_isLoading)
+        {
+            <LoadingSpinner Message="Loading citations..." />
+        }
+        else if (_filteredCitations.Count == 0)
+        {
+            @if (_filterOptions.HasActiveFilters)
+            {
+                <EmptyState Icon="bi-search" Title="No matches found"
+                            Message="No citations match your current filters."
+                            ActionText="Clear Filters" OnAction="ClearFilters" ActionIcon="bi-x-lg" />
+            }
+            else
+            {
+                <EmptyState Icon="bi-journal-text" Title="No citations yet"
+                            Message="Start by adding your first citation."
+                            ActionText="Add Citation" ActionUrl="/citations/new" ActionIcon="bi-plus-lg" />
+            }
+        }
+        else
+        {
+            <Virtualize Items="_filteredCitations" Context="citation">
+                <CitationCard Citation="citation" OnDelete="HandleDelete" OnCopy="HandleCopy" />
+            </Virtualize>
+        }
+    </div>
+</div>
+
+<ConfirmDialog @ref="_confirmDialog" />
+
+@code {
+    private List<Citation> _allCitations = new();
+    private List<Citation> _filteredCitations = new();
+    private List<Domain> _domains = new();
+    private FilterOptions _filterOptions = new();
+    private string _selectedDomainId = "";
+    private bool _isLoading = true;
+    private ConfirmDialog? _confirmDialog;
+    private System.Timers.Timer? _searchTimer;
+
+    protected override async Task OnInitializedAsync()
+    {
+        // Check for domain filter in URL query string
+        var uri = Navigation.ToAbsoluteUri(Navigation.Uri);
+        var query = System.Web.HttpUtility.ParseQueryString(uri.Query);
+        var domainParam = query["domain"];
+        if (!string.IsNullOrEmpty(domainParam) && Guid.TryParse(domainParam, out var domainId))
+        {
+            _selectedDomainId = domainId.ToString();
+            _filterOptions.DomainId = domainId;
+        }
+
+        await LoadData();
+    }
+
+    private async Task LoadData()
+    {
+        _isLoading = true;
+        try
+        {
+            _domains = await DomainService.GetAllAsync();
+            _allCitations = await CitationService.GetAllAsync();
+            await ApplyFilters();
+        }
+        finally
+        {
+            _isLoading = false;
+        }
+    }
+
+    private async Task ApplyFilters()
+    {
+        if (!string.IsNullOrEmpty(_selectedDomainId) && Guid.TryParse(_selectedDomainId, out var domainId))
+        {
+            _filterOptions.DomainId = domainId;
+        }
+        else
+        {
+            _filterOptions.DomainId = null;
+        }
+
+        _filteredCitations = await CitationService.SearchAsync(_filterOptions);
+    }
+
+    private void HandleSearchKeyUp(KeyboardEventArgs e)
+    {
+        _searchTimer?.Stop();
+        _searchTimer?.Dispose();
+        _searchTimer = new System.Timers.Timer(300);
+        _searchTimer.Elapsed += async (s, args) =>
+        {
+            _searchTimer?.Stop();
+            await InvokeAsync(async () =>
+            {
+                await ApplyFilters();
+                StateHasChanged();
+            });
+        };
+        _searchTimer.Start();
+    }
+
+    private async Task ToggleTypeFilter(CitationType type, bool isChecked)
+    {
+        if (isChecked && !_filterOptions.Types.Contains(type))
+        {
+            _filterOptions.Types.Add(type);
+        }
+        else if (!isChecked && _filterOptions.Types.Contains(type))
+        {
+            _filterOptions.Types.Remove(type);
+        }
+        await ApplyFilters();
+    }
+
+    private async Task ToggleSortDirection()
+    {
+        _filterOptions.SortDescending = !_filterOptions.SortDescending;
+        await ApplyFilters();
+    }
+
+    private async Task ClearFilters()
+    {
+        _filterOptions.Clear();
+        _selectedDomainId = "";
+        await ApplyFilters();
+    }
+
+    private async Task HandleDelete(Citation citation)
+    {
+        if (_confirmDialog == null) return;
+
+        var confirmed = await _confirmDialog.ShowDeleteAsync(citation.Title);
+        if (confirmed)
+        {
+            var result = await CitationService.DeleteAsync(citation.Id);
+            if (result.Success)
+            {
+                _allCitations.Remove(citation);
+                await ApplyFilters();
+            }
+        }
+    }
+
+    private async Task HandleCopy(string text)
+    {
+        await JS.InvokeVoidAsync("navigator.clipboard.writeText", text);
+    }
+}

@@ -1,0 +1,386 @@
+@page "/settings"
+@inject IStorageService StorageService
+@inject ICitationService CitationService
+@inject IUrlHealthService UrlHealthService
+@inject Blazored.LocalStorage.ILocalStorageService LocalStorage
+@inject IJSRuntime JS
+@inject NavigationManager Navigation
+
+<PageTitle>Settings - Citation Manager</PageTitle>
+
+<div class="row mb-4">
+    <div class="col-12">
+        <h1 class="h3 mb-1">Settings</h1>
+        <p class="text-muted mb-0">Configure application preferences and manage data</p>
+    </div>
+</div>
+
+<div class="row">
+    <div class="col-lg-8">
+        <div class="card mb-4">
+            <div class="card-header">
+                <h5 class="mb-0">
+                    <i class="bi bi-link-45deg me-2"></i>URL Health Checking
+                </h5>
+            </div>
+            <div class="card-body">
+                <p class="text-muted small mb-3">
+                    Check if URLs in your citations are still accessible. This helps identify broken links.
+                </p>
+
+                @if (_isCheckingUrls)
+                {
+                    <div class="mb-3">
+                        <div class="d-flex justify-content-between small mb-1">
+                            <span>Checking URLs...</span>
+                            <span>@_healthCheckProgress%</span>
+                        </div>
+                        <div class="progress">
+                            <div class="progress-bar" role="progressbar" style="width: @_healthCheckProgress%"
+                                 aria-valuenow="@_healthCheckProgress" aria-valuemin="0" aria-valuemax="100"></div>
+                        </div>
+                    </div>
+                }
+
+                <button class="btn btn-outline-primary" @onclick="CheckAllUrls" disabled="@_isCheckingUrls">
+                    <i class="bi bi-arrow-repeat me-2"></i>Check All URLs Now
+                </button>
+
+                @if (_lastHealthCheckTime.HasValue)
+                {
+                    <small class="text-muted ms-3">Last checked: @_lastHealthCheckTime.Value.ToString("g")</small>
+                }
+            </div>
+        </div>
+
+        <div class="card mb-4">
+            <div class="card-header">
+                <h5 class="mb-0">
+                    <i class="bi bi-database me-2"></i>Data Backup
+                </h5>
+            </div>
+            <div class="card-body">
+                <p class="text-muted small mb-3">
+                    Export all your data as a JSON backup file. You can restore from this file later.
+                </p>
+
+                <div class="d-flex gap-2 flex-wrap">
+                    <button class="btn btn-outline-primary" @onclick="DownloadBackup" disabled="@_isExporting">
+                        @if (_isExporting)
+                        {
+                            <span class="spinner-border spinner-border-sm me-2" role="status" aria-hidden="true"></span>
+                        }
+                        <i class="bi bi-download me-2"></i>Download Backup
+                    </button>
+
+                    <label class="btn btn-outline-secondary mb-0">
+                        <i class="bi bi-upload me-2"></i>Restore from Backup
+                        <InputFile OnChange="RestoreFromBackup" accept=".json" class="d-none" />
+                    </label>
+                </div>
+
+                @if (!string.IsNullOrEmpty(_backupMessage))
+                {
+                    <div class="alert @_backupAlertClass mt-3 mb-0" role="alert">
+                        <i class="bi @_backupIconClass me-2"></i>
+                        @_backupMessage
+                    </div>
+                }
+            </div>
+        </div>
+
+        <div class="card mb-4 border-danger">
+            <div class="card-header bg-danger text-white">
+                <h5 class="mb-0">
+                    <i class="bi bi-exclamation-triangle me-2"></i>Danger Zone
+                </h5>
+            </div>
+            <div class="card-body">
+                <p class="text-muted small mb-3">
+                    These actions are irreversible. Make sure to backup your data before proceeding.
+                </p>
+
+                <div class="d-flex flex-wrap gap-2">
+                    <button class="btn btn-outline-danger" @onclick="ClearAllData" disabled="@_isClearing">
+                        @if (_isClearing)
+                        {
+                            <span class="spinner-border spinner-border-sm me-2" role="status" aria-hidden="true"></span>
+                        }
+                        <i class="bi bi-trash me-2"></i>Clear All Data
+                    </button>
+
+                    <button class="btn btn-outline-warning" @onclick="ResetAndReseed" disabled="@_isResetting">
+                        @if (_isResetting)
+                        {
+                            <span class="spinner-border spinner-border-sm me-2" role="status" aria-hidden="true"></span>
+                        }
+                        <i class="bi bi-arrow-clockwise me-2"></i>Reset &amp; Reseed Demo Data
+                    </button>
+                </div>
+
+                <p class="text-muted small mt-3 mb-0">
+                    <strong>Clear All Data:</strong> Removes all citations and domains, leaving an empty database.<br/>
+                    <strong>Reset &amp; Reseed:</strong> Deletes the database and reloads with the original demo citations.
+                </p>
+            </div>
+        </div>
+    </div>
+
+    <div class="col-lg-4">
+        <div class="card mb-4">
+            <div class="card-header">
+                <h5 class="mb-0">Storage Statistics</h5>
+            </div>
+            <div class="card-body">
+                <dl class="row mb-0">
+                    <dt class="col-7 text-muted">Citations</dt>
+                    <dd class="col-5 text-end">@_citationCount</dd>
+                    <dt class="col-7 text-muted">Domains</dt>
+                    <dd class="col-5 text-end">@_domainCount</dd>
+                    <dt class="col-7 text-muted">URLs with Health Data</dt>
+                    <dd class="col-5 text-end">@_urlsChecked</dd>
+                    <dt class="col-7 text-muted">Healthy URLs</dt>
+                    <dd class="col-5 text-end text-success">@_healthyUrls</dd>
+                    <dt class="col-7 text-muted">Unhealthy URLs</dt>
+                    <dd class="col-5 text-end text-danger">@_unhealthyUrls</dd>
+                </dl>
+            </div>
+        </div>
+
+        <div class="card">
+            <div class="card-header">
+                <h5 class="mb-0">About</h5>
+            </div>
+            <div class="card-body">
+                <p class="small text-muted mb-2">
+                    <strong>Citation Manager</strong><br />
+                    Version 1.0.0
+                </p>
+                <p class="small text-muted mb-2">
+                    Built with Blazor WebAssembly and .NET 9
+                </p>
+                <p class="small text-muted mb-0">
+                    Data is stored locally in your browser using IndexedDB.
+                </p>
+            </div>
+        </div>
+    </div>
+</div>
+
+<ConfirmDialog @ref="_confirmDialog" />
+
+@code {
+    private int _citationCount;
+    private int _domainCount;
+    private int _urlsChecked;
+    private int _healthyUrls;
+    private int _unhealthyUrls;
+    private DateTime? _lastHealthCheckTime;
+
+    private bool _isCheckingUrls;
+    private int _healthCheckProgress;
+    private bool _isExporting;
+    private bool _isClearing;
+    private bool _isResetting;
+    private string _backupMessage = "";
+    private string _backupAlertClass = "";
+    private string _backupIconClass = "";
+
+    private ConfirmDialog? _confirmDialog;
+
+    protected override async Task OnInitializedAsync()
+    {
+        await LoadStats();
+    }
+
+    private async Task LoadStats()
+    {
+        var citations = await CitationService.GetAllAsync();
+        _citationCount = citations.Count;
+        _domainCount = await StorageService.GetDomainCountAsync();
+
+        var withHealthCheck = citations.Where(c => c.LastHealthCheck != null).ToList();
+        _urlsChecked = withHealthCheck.Count;
+        _healthyUrls = withHealthCheck.Count(c => c.LastHealthCheck!.IsHealthy);
+        _unhealthyUrls = withHealthCheck.Count(c => !c.LastHealthCheck!.IsHealthy);
+
+        var lastCheck = withHealthCheck.OrderByDescending(c => c.LastHealthCheck!.CheckedAt).FirstOrDefault();
+        _lastHealthCheckTime = lastCheck?.LastHealthCheck?.CheckedAt;
+    }
+
+    private async Task CheckAllUrls()
+    {
+        _isCheckingUrls = true;
+        _healthCheckProgress = 0;
+
+        try
+        {
+            var citations = await CitationService.GetAllAsync();
+            var progress = new Progress<int>(p =>
+            {
+                _healthCheckProgress = p;
+                StateHasChanged();
+            });
+
+            var results = await UrlHealthService.CheckAllUrlsAsync(citations, progress);
+
+            // Update citations with health status
+            foreach (var citation in citations)
+            {
+                if (results.TryGetValue(citation.Id, out var status))
+                {
+                    citation.LastHealthCheck = status;
+                    await StorageService.SaveCitationAsync(citation);
+                }
+            }
+
+            await LoadStats();
+        }
+        finally
+        {
+            _isCheckingUrls = false;
+        }
+    }
+
+    private async Task DownloadBackup()
+    {
+        _isExporting = true;
+        _backupMessage = "";
+
+        try
+        {
+            var jsonData = await StorageService.ExportAllDataAsync();
+            var fileName = $"citation_backup_{DateTime.Now:yyyyMMdd_HHmmss}.json";
+            var bytes = System.Text.Encoding.UTF8.GetBytes(jsonData);
+            var base64 = Convert.ToBase64String(bytes);
+
+            await JS.InvokeVoidAsync("downloadFile", "application/json", base64, fileName);
+
+            ShowBackupMessage("Backup downloaded successfully!", true);
+        }
+        catch (Exception ex)
+        {
+            ShowBackupMessage($"Failed to create backup: {ex.Message}", false);
+        }
+        finally
+        {
+            _isExporting = false;
+        }
+    }
+
+    private async Task RestoreFromBackup(InputFileChangeEventArgs e)
+    {
+        _backupMessage = "";
+
+        try
+        {
+            var file = e.File;
+            if (file.Size > 50 * 1024 * 1024)
+            {
+                ShowBackupMessage("File too large. Maximum size is 50MB.", false);
+                return;
+            }
+
+            using var stream = file.OpenReadStream(maxAllowedSize: 50 * 1024 * 1024);
+            using var reader = new StreamReader(stream);
+            var jsonContent = await reader.ReadToEndAsync();
+
+            var confirmed = _confirmDialog != null &&
+                await _confirmDialog.ShowAsync(
+                    "This will replace all existing data with the backup. Are you sure?",
+                    "Restore Backup",
+                    ConfirmDialog.ConfirmType.Warning);
+
+            if (!confirmed) return;
+
+            var success = await StorageService.ImportAllDataAsync(jsonContent);
+
+            if (success)
+            {
+                ShowBackupMessage("Data restored successfully!", true);
+                await LoadStats();
+            }
+            else
+            {
+                ShowBackupMessage("Failed to restore data. The backup file may be corrupted.", false);
+            }
+        }
+        catch (Exception ex)
+        {
+            ShowBackupMessage($"Failed to restore backup: {ex.Message}", false);
+        }
+    }
+
+    private async Task ClearAllData()
+    {
+        if (_confirmDialog == null) return;
+
+        var confirmed = await _confirmDialog.ShowAsync(
+            "This will permanently delete ALL citations and domains. This action cannot be undone. Are you absolutely sure?",
+            "Clear All Data",
+            ConfirmDialog.ConfirmType.Danger);
+
+        if (!confirmed) return;
+
+        _isClearing = true;
+        StateHasChanged();
+
+        try
+        {
+            var success = await StorageService.ClearAllDataAsync();
+            if (success)
+            {
+                ShowBackupMessage("All data has been cleared successfully.", true);
+                await LoadStats();
+            }
+            else
+            {
+                ShowBackupMessage("Failed to clear data. Please try again or use Reset & Reseed.", false);
+            }
+        }
+        catch (Exception ex)
+        {
+            ShowBackupMessage($"Failed to clear data: {ex.Message}", false);
+        }
+        finally
+        {
+            _isClearing = false;
+            StateHasChanged();
+        }
+    }
+
+    private async Task ResetAndReseed()
+    {
+        if (_confirmDialog == null) return;
+
+        var confirmed = await _confirmDialog.ShowAsync(
+            "This will delete the entire database and reload the page with fresh demo data. All your custom citations will be lost. Continue?",
+            "Reset & Reseed",
+            ConfirmDialog.ConfirmType.Warning);
+
+        if (!confirmed) return;
+
+        _isResetting = true;
+        StateHasChanged();
+
+        try
+        {
+            await StorageService.DeleteDatabaseAsync();
+            // Force a full page reload to reinitialize the database and trigger seeding
+            await JS.InvokeVoidAsync("reloadPage");
+        }
+        catch (Exception ex)
+        {
+            ShowBackupMessage($"Failed to reset database: {ex.Message}", false);
+            _isResetting = false;
+            StateHasChanged();
+        }
+    }
+
+    private void ShowBackupMessage(string message, bool success)
+    {
+        _backupMessage = message;
+        _backupAlertClass = success ? "alert-success" : "alert-danger";
+        _backupIconClass = success ? "bi-check-circle" : "bi-x-circle";
+    }
+}

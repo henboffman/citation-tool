@@ -1,0 +1,623 @@
+@page "/citations"
+@page "/citations/new"
+@page "/citations/{Id:guid}"
+@page "/citations/{Id:guid}/edit"
+@inject ICitationService CitationService
+@inject NavigationManager Navigation
+@inject IJSRuntime JS
+
+<PageTitle>@GetPageTitle() - Citation Manager</PageTitle>
+
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <div>
+        <h1 class="h3 mb-1">@GetPageTitle()</h1>
+        @if (_mode == PageMode.List)
+        {
+            <p class="text-muted mb-0">Browse, search, and manage your citations</p>
+        }
+    </div>
+    @if (_mode == PageMode.List)
+    {
+        <a href="/citations/new" class="btn btn-primary">
+            <i class="bi bi-plus-lg me-2"></i>Add Citation
+        </a>
+    }
+</div>
+
+@if (_isLoading)
+{
+    <LoadingSpinner Message="Loading..." />
+}
+else
+{
+    @switch (_mode)
+    {
+        case PageMode.List:
+            <CitationList />
+            break;
+
+        case PageMode.Create:
+            <div class="card">
+                <div class="card-body">
+                    <CitationForm Citation="_citation" IsEdit="false" IsSubmitting="_isSubmitting"
+                                  ValidationErrors="_validationErrors" OnSubmit="HandleCreate" OnCancel="GoToList" />
+                </div>
+            </div>
+            break;
+
+        case PageMode.View:
+            @if (_citation != null)
+            {
+                <div class="row">
+                    <div class="col-lg-8">
+                        <div class="card mb-4">
+                            <div class="card-body">
+                                <div class="d-flex justify-content-between align-items-start mb-3">
+                                    <span class="badge bg-light text-dark border">
+                                        @_citation.Type.GetDisplayName()
+                                    </span>
+                                    <div class="d-flex gap-2">
+                                        <div class="dropdown">
+                                            <button class="btn btn-outline-secondary btn-sm dropdown-toggle" type="button" data-bs-toggle="dropdown" aria-expanded="false">
+                                                <i class="bi bi-clipboard me-1"></i>Copy
+                                            </button>
+                                            <ul class="dropdown-menu">
+                                                <li>
+                                                    <button class="dropdown-item" @onclick="() => CopyCitation(CitationFormat.IEEE)">
+                                                        <i class="bi bi-file-text me-2"></i>IEEE Format
+                                                    </button>
+                                                </li>
+                                                <li>
+                                                    <button class="dropdown-item" @onclick="() => CopyCitation(CitationFormat.APA)">
+                                                        <i class="bi bi-file-text me-2"></i>APA Format
+                                                    </button>
+                                                </li>
+                                                <li>
+                                                    <button class="dropdown-item" @onclick="() => CopyCitation(CitationFormat.BibTeX)">
+                                                        <i class="bi bi-code me-2"></i>BibTeX
+                                                    </button>
+                                                </li>
+                                                <li><hr class="dropdown-divider" /></li>
+                                                <li>
+                                                    <button class="dropdown-item" @onclick="() => CopyCitation(CitationFormat.PlainText)">
+                                                        <i class="bi bi-fonts me-2"></i>Plain Text
+                                                    </button>
+                                                </li>
+                                            </ul>
+                                        </div>
+                                        <a href="/citations/@_citation.Id/edit" class="btn btn-outline-primary btn-sm">
+                                            <i class="bi bi-pencil me-1"></i>Edit
+                                        </a>
+                                        <button class="btn btn-outline-danger btn-sm" @onclick="HandleDelete">
+                                            <i class="bi bi-trash me-1"></i>Delete
+                                        </button>
+                                    </div>
+                                </div>
+
+                                @if (_copySuccess)
+                                {
+                                    <div class="alert alert-success alert-dismissible fade show py-2" role="alert">
+                                        <i class="bi bi-check-circle me-2"></i>Citation copied to clipboard!
+                                        <button type="button" class="btn-close" @onclick="() => _copySuccess = false" aria-label="Close"></button>
+                                    </div>
+                                }
+
+                                <h2 class="h4 mb-3">@_citation.Title</h2>
+                                <p class="text-muted">@_citation.AuthorsDisplay</p>
+
+                                <div class="bg-light p-3 rounded mb-4">
+                                    <small class="text-muted d-block mb-1">Formatted Citation (IEEE Style)</small>
+                                    <p class="mb-0">@_citation.FormattedCitation</p>
+                                </div>
+
+                                @if (!string.IsNullOrEmpty(_citation.Abstract))
+                                {
+                                    <h6 class="fw-bold">Abstract</h6>
+                                    <p class="text-muted">@_citation.Abstract</p>
+                                }
+
+                                @if (!string.IsNullOrEmpty(_citation.Notes))
+                                {
+                                    <h6 class="fw-bold">Notes</h6>
+                                    <p class="text-muted">@_citation.Notes</p>
+                                }
+
+                                @if (_citation.Tags.Count > 0)
+                                {
+                                    <h6 class="fw-bold">Tags</h6>
+                                    <div class="d-flex flex-wrap gap-2">
+                                        @foreach (var tag in _citation.Tags)
+                                        {
+                                            <span class="tag">@tag</span>
+                                        }
+                                    </div>
+                                }
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="col-lg-4">
+                        <div class="card mb-4">
+                            <div class="card-header">
+                                <h6 class="mb-0">Publication Details</h6>
+                            </div>
+                            <div class="card-body">
+                                <dl class="row mb-0 small">
+                                    @if (!string.IsNullOrEmpty(_citation.JournalOrConference))
+                                    {
+                                        <dt class="col-5 text-muted">Journal/Conference</dt>
+                                        <dd class="col-7">@_citation.JournalOrConference</dd>
+                                    }
+                                    @if (_citation.Year.HasValue)
+                                    {
+                                        <dt class="col-5 text-muted">Year</dt>
+                                        <dd class="col-7">@_citation.Year @_citation.Month</dd>
+                                    }
+                                    @if (!string.IsNullOrEmpty(_citation.Volume))
+                                    {
+                                        <dt class="col-5 text-muted">Volume</dt>
+                                        <dd class="col-7">@_citation.Volume</dd>
+                                    }
+                                    @if (!string.IsNullOrEmpty(_citation.Issue))
+                                    {
+                                        <dt class="col-5 text-muted">Issue</dt>
+                                        <dd class="col-7">@_citation.Issue</dd>
+                                    }
+                                    @if (!string.IsNullOrEmpty(_citation.Pages))
+                                    {
+                                        <dt class="col-5 text-muted">Pages</dt>
+                                        <dd class="col-7">@_citation.Pages</dd>
+                                    }
+                                    @if (!string.IsNullOrEmpty(_citation.Publisher))
+                                    {
+                                        <dt class="col-5 text-muted">Publisher</dt>
+                                        <dd class="col-7">@_citation.Publisher</dd>
+                                    }
+                                </dl>
+                            </div>
+                        </div>
+
+                        <div class="card mb-4">
+                            <div class="card-header">
+                                <h6 class="mb-0">Links</h6>
+                            </div>
+                            <div class="card-body">
+                                @if (!string.IsNullOrEmpty(_citation.Doi))
+                                {
+                                    <div class="mb-3">
+                                        <small class="text-muted d-block">DOI</small>
+                                        <a href="https://doi.org/@_citation.Doi" target="_blank" rel="noopener" class="text-break">
+                                            @_citation.Doi
+                                            <i class="bi bi-box-arrow-up-right ms-1"></i>
+                                        </a>
+                                    </div>
+                                }
+                                @if (!string.IsNullOrEmpty(_citation.Url))
+                                {
+                                    <div class="mb-3">
+                                        <small class="text-muted d-block d-flex align-items-center">
+                                            URL
+                                            @if (_citation.LastHealthCheck != null)
+                                            {
+                                                <span class="ms-2 health-indicator">
+                                                    <i class="bi @_citation.LastHealthCheck.IconClass @_citation.LastHealthCheck.CssClass"></i>
+                                                    <span class="small @_citation.LastHealthCheck.CssClass">@_citation.LastHealthCheck.StatusText</span>
+                                                </span>
+                                            }
+                                        </small>
+                                        <a href="@_citation.Url" target="_blank" rel="noopener" class="text-break">
+                                            @_citation.Url
+                                            <i class="bi bi-box-arrow-up-right ms-1"></i>
+                                        </a>
+                                    </div>
+                                }
+                                @if (!string.IsNullOrEmpty(_citation.Isbn))
+                                {
+                                    <div>
+                                        <small class="text-muted d-block">ISBN</small>
+                                        <span>@_citation.Isbn</span>
+                                    </div>
+                                }
+                                @if (string.IsNullOrEmpty(_citation.Doi) && string.IsNullOrEmpty(_citation.Url) && string.IsNullOrEmpty(_citation.Isbn))
+                                {
+                                    <p class="text-muted small mb-0">No links available.</p>
+                                }
+                            </div>
+                        </div>
+
+                        <div class="card">
+                            <div class="card-header">
+                                <h6 class="mb-0">Metadata</h6>
+                            </div>
+                            <div class="card-body small">
+                                <dl class="row mb-0">
+                                    <dt class="col-5 text-muted">Added</dt>
+                                    <dd class="col-7">@_citation.DateAdded.ToString("g")</dd>
+                                    <dt class="col-5 text-muted">Modified</dt>
+                                    <dd class="col-7">@_citation.DateModified.ToString("g")</dd>
+                                </dl>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            }
+            break;
+
+        case PageMode.Edit:
+            @if (_citation != null)
+            {
+                <div class="card">
+                    <div class="card-body">
+                        <CitationForm Citation="_citation" IsEdit="true" IsSubmitting="_isSubmitting"
+                                      ValidationErrors="_validationErrors" OnSubmit="HandleUpdate" OnCancel="() => GoToDetail(_citation.Id)" />
+                    </div>
+                </div>
+            }
+            break;
+    }
+}
+
+<ConfirmDialog @ref="_confirmDialog" />
+
+@code {
+    [Parameter] public Guid? Id { get; set; }
+
+    private PageMode _mode;
+    private Citation _citation = new();
+    private bool _isLoading;
+    private bool _isSubmitting;
+    private bool _copySuccess;
+    private List<string> _validationErrors = new();
+    private ConfirmDialog? _confirmDialog;
+
+    protected override async Task OnParametersSetAsync()
+    {
+        await DetermineMode();
+    }
+
+    private async Task DetermineMode()
+    {
+        var uri = Navigation.ToAbsoluteUri(Navigation.Uri);
+        var path = uri.AbsolutePath.ToLower();
+
+        _isLoading = true;
+        _validationErrors.Clear();
+
+        try
+        {
+            if (path == "/citations/new")
+            {
+                _mode = PageMode.Create;
+                _citation = new Citation();
+            }
+            else if (Id.HasValue && path.EndsWith("/edit"))
+            {
+                _mode = PageMode.Edit;
+                _citation = await CitationService.GetByIdAsync(Id.Value) ?? new Citation();
+                if (_citation.Id == Guid.Empty)
+                {
+                    Navigation.NavigateTo("/citations");
+                }
+            }
+            else if (Id.HasValue)
+            {
+                _mode = PageMode.View;
+                _citation = await CitationService.GetByIdAsync(Id.Value) ?? new Citation();
+                if (_citation.Id == Guid.Empty)
+                {
+                    Navigation.NavigateTo("/citations");
+                }
+            }
+            else
+            {
+                _mode = PageMode.List;
+            }
+        }
+        finally
+        {
+            _isLoading = false;
+        }
+    }
+
+    private string GetPageTitle() => _mode switch
+    {
+        PageMode.Create => "Add New Citation",
+        PageMode.Edit => "Edit Citation",
+        PageMode.View => _citation?.Title ?? "Citation",
+        _ => "Citations"
+    };
+
+    private async Task HandleCreate(Citation citation)
+    {
+        _isSubmitting = true;
+        _validationErrors.Clear();
+
+        try
+        {
+            var result = await CitationService.CreateAsync(citation);
+            if (result.Success && result.Data != null)
+            {
+                Navigation.NavigateTo($"/citations/{result.Data.Id}");
+            }
+            else
+            {
+                _validationErrors = result.ValidationErrors;
+            }
+        }
+        finally
+        {
+            _isSubmitting = false;
+        }
+    }
+
+    private async Task HandleUpdate(Citation citation)
+    {
+        _isSubmitting = true;
+        _validationErrors.Clear();
+
+        try
+        {
+            var result = await CitationService.UpdateAsync(citation);
+            if (result.Success)
+            {
+                Navigation.NavigateTo($"/citations/{citation.Id}");
+            }
+            else
+            {
+                _validationErrors = result.ValidationErrors;
+            }
+        }
+        finally
+        {
+            _isSubmitting = false;
+        }
+    }
+
+    private async Task HandleDelete()
+    {
+        if (_confirmDialog == null || _citation == null) return;
+
+        var confirmed = await _confirmDialog.ShowDeleteAsync(_citation.Title);
+        if (confirmed)
+        {
+            var result = await CitationService.DeleteAsync(_citation.Id);
+            if (result.Success)
+            {
+                Navigation.NavigateTo("/citations");
+            }
+        }
+    }
+
+    private void GoToList() => Navigation.NavigateTo("/citations");
+    private void GoToDetail(Guid id) => Navigation.NavigateTo($"/citations/{id}");
+
+    private async Task CopyCitation(CitationFormat format)
+    {
+        if (_citation == null) return;
+
+        var text = format switch
+        {
+            CitationFormat.IEEE => FormatIEEE(_citation),
+            CitationFormat.APA => FormatAPA(_citation),
+            CitationFormat.BibTeX => FormatBibTeX(_citation),
+            CitationFormat.PlainText => FormatPlainText(_citation),
+            _ => _citation.FormattedCitation
+        };
+
+        await JS.InvokeVoidAsync("navigator.clipboard.writeText", text);
+        _copySuccess = true;
+        StateHasChanged();
+
+        // Auto-hide after 3 seconds
+        await Task.Delay(3000);
+        _copySuccess = false;
+        StateHasChanged();
+    }
+
+    private string FormatIEEE(Citation c)
+    {
+        var parts = new List<string>();
+
+        // Authors
+        if (c.Authors.Count > 0)
+        {
+            var authorList = c.Authors.Select(a =>
+            {
+                var parts = a.Split(' ', StringSplitOptions.RemoveEmptyEntries);
+                if (parts.Length >= 2)
+                    return $"{parts[0][0]}. {string.Join(" ", parts.Skip(1))}";
+                return a;
+            });
+            parts.Add(string.Join(", ", authorList));
+        }
+
+        // Title in quotes
+        parts.Add($"\"{c.Title}\"");
+
+        // Journal/Conference in italics (represented as-is for plain text)
+        if (!string.IsNullOrEmpty(c.JournalOrConference))
+            parts.Add(c.JournalOrConference);
+
+        // Volume and Issue
+        if (!string.IsNullOrEmpty(c.Volume))
+        {
+            var vol = $"vol. {c.Volume}";
+            if (!string.IsNullOrEmpty(c.Issue))
+                vol += $", no. {c.Issue}";
+            parts.Add(vol);
+        }
+
+        // Pages
+        if (!string.IsNullOrEmpty(c.Pages))
+            parts.Add($"pp. {c.Pages}");
+
+        // Year
+        if (c.Year.HasValue)
+            parts.Add(c.Year.ToString()!);
+
+        // DOI
+        if (!string.IsNullOrEmpty(c.Doi))
+            parts.Add($"doi: {c.Doi}");
+
+        return string.Join(", ", parts) + ".";
+    }
+
+    private string FormatAPA(Citation c)
+    {
+        var sb = new System.Text.StringBuilder();
+
+        // Authors (Last, F. M., & Last, F. M.)
+        if (c.Authors.Count > 0)
+        {
+            var formattedAuthors = c.Authors.Select(a =>
+            {
+                var parts = a.Split(' ', StringSplitOptions.RemoveEmptyEntries);
+                if (parts.Length >= 2)
+                {
+                    var lastName = parts.Last();
+                    var initials = string.Join(". ", parts.Take(parts.Length - 1).Select(p => p[0])) + ".";
+                    return $"{lastName}, {initials}";
+                }
+                return a;
+            }).ToList();
+
+            if (formattedAuthors.Count == 1)
+                sb.Append(formattedAuthors[0]);
+            else if (formattedAuthors.Count == 2)
+                sb.Append($"{formattedAuthors[0]} & {formattedAuthors[1]}");
+            else
+                sb.Append($"{string.Join(", ", formattedAuthors.Take(formattedAuthors.Count - 1))}, & {formattedAuthors.Last()}");
+        }
+
+        // Year
+        if (c.Year.HasValue)
+            sb.Append($" ({c.Year}).");
+        else
+            sb.Append(" (n.d.).");
+
+        // Title
+        sb.Append($" {c.Title}.");
+
+        // Journal/Conference (in italics - shown as-is)
+        if (!string.IsNullOrEmpty(c.JournalOrConference))
+        {
+            sb.Append($" {c.JournalOrConference}");
+            if (!string.IsNullOrEmpty(c.Volume))
+            {
+                sb.Append($", {c.Volume}");
+                if (!string.IsNullOrEmpty(c.Issue))
+                    sb.Append($"({c.Issue})");
+            }
+            if (!string.IsNullOrEmpty(c.Pages))
+                sb.Append($", {c.Pages}");
+            sb.Append('.');
+        }
+
+        // DOI or URL
+        if (!string.IsNullOrEmpty(c.Doi))
+            sb.Append($" https://doi.org/{c.Doi}");
+        else if (!string.IsNullOrEmpty(c.Url))
+            sb.Append($" {c.Url}");
+
+        return sb.ToString();
+    }
+
+    private string FormatBibTeX(Citation c)
+    {
+        var type = c.Type switch
+        {
+            CitationType.Article => "article",
+            CitationType.InProceedings => "inproceedings",
+            CitationType.Book => "book",
+            CitationType.InBook => "inbook",
+            CitationType.TechReport => "techreport",
+            CitationType.Thesis => "phdthesis",
+            CitationType.Manual => "manual",
+            _ => "misc"
+        };
+
+        // Generate a citation key
+        var firstAuthor = c.Authors.FirstOrDefault()?.Split(' ').LastOrDefault() ?? "unknown";
+        var year = c.Year?.ToString() ?? "nd";
+        var key = $"{firstAuthor.ToLower()}{year}";
+
+        var sb = new System.Text.StringBuilder();
+        sb.AppendLine($"@{type}{{{key},");
+        sb.AppendLine($"  title = {{{c.Title}}},");
+
+        if (c.Authors.Count > 0)
+            sb.AppendLine($"  author = {{{string.Join(" and ", c.Authors)}}},");
+
+        if (c.Year.HasValue)
+            sb.AppendLine($"  year = {{{c.Year}}},");
+
+        if (!string.IsNullOrEmpty(c.JournalOrConference))
+        {
+            var field = c.Type == CitationType.InProceedings ? "booktitle" : "journal";
+            sb.AppendLine($"  {field} = {{{c.JournalOrConference}}},");
+        }
+
+        if (!string.IsNullOrEmpty(c.Volume))
+            sb.AppendLine($"  volume = {{{c.Volume}}},");
+
+        if (!string.IsNullOrEmpty(c.Issue))
+            sb.AppendLine($"  number = {{{c.Issue}}},");
+
+        if (!string.IsNullOrEmpty(c.Pages))
+            sb.AppendLine($"  pages = {{{c.Pages}}},");
+
+        if (!string.IsNullOrEmpty(c.Publisher))
+            sb.AppendLine($"  publisher = {{{c.Publisher}}},");
+
+        if (!string.IsNullOrEmpty(c.Doi))
+            sb.AppendLine($"  doi = {{{c.Doi}}},");
+
+        if (!string.IsNullOrEmpty(c.Url))
+            sb.AppendLine($"  url = {{{c.Url}}},");
+
+        if (!string.IsNullOrEmpty(c.Isbn))
+            sb.AppendLine($"  isbn = {{{c.Isbn}}},");
+
+        sb.Append('}');
+        return sb.ToString();
+    }
+
+    private string FormatPlainText(Citation c)
+    {
+        var parts = new List<string>();
+
+        if (c.Authors.Count > 0)
+            parts.Add(string.Join(", ", c.Authors));
+
+        if (c.Year.HasValue)
+            parts.Add($"({c.Year})");
+
+        parts.Add(c.Title);
+
+        if (!string.IsNullOrEmpty(c.JournalOrConference))
+            parts.Add(c.JournalOrConference);
+
+        if (!string.IsNullOrEmpty(c.Url))
+            parts.Add(c.Url);
+        else if (!string.IsNullOrEmpty(c.Doi))
+            parts.Add($"https://doi.org/{c.Doi}");
+
+        return string.Join(". ", parts) + ".";
+    }
+
+    private enum PageMode
+    {
+        List,
+        Create,
+        View,
+        Edit
+    }
+
+    private enum CitationFormat
+    {
+        IEEE,
+        APA,
+        BibTeX,
+        PlainText
+    }
+}

@@ -1,0 +1,65 @@
+@inherits LayoutComponentBase
+@inject IJSRuntime JS
+@implements IAsyncDisposable
+
+<CascadingValue Value="this">
+    <div class="d-flex flex-column min-vh-100">
+        <header>
+            <NavMenu />
+        </header>
+
+        <main class="flex-grow-1">
+            <div class="container-fluid py-4">
+                @Body
+            </div>
+        </main>
+
+        <footer class="bg-light border-top py-3 mt-auto">
+            <div class="container-fluid">
+                <div class="d-flex justify-content-between align-items-center text-muted small">
+                    <span>Citation Manager</span>
+                    <span>
+                        <a href="/help" class="text-muted text-decoration-none">Help</a>
+                    </span>
+                </div>
+            </div>
+        </footer>
+    </div>
+
+    <Toast @ref="_toast" />
+    <QuickSearch @ref="_quickSearch" />
+</CascadingValue>
+
+@code {
+    private Toast? _toast;
+    private QuickSearch? _quickSearch;
+    private DotNetObjectReference<MainLayout>? _dotNetRef;
+
+    public Toast? Toast => _toast;
+
+    public void OpenQuickSearch()
+    {
+        _quickSearch?.Open();
+    }
+
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        if (firstRender)
+        {
+            _dotNetRef = DotNetObjectReference.Create(this);
+            await JS.InvokeVoidAsync("setupQuickSearchShortcut", _dotNetRef);
+        }
+    }
+
+    [JSInvokable]
+    public void TriggerQuickSearch()
+    {
+        OpenQuickSearch();
+        StateHasChanged();
+    }
+
+    public async ValueTask DisposeAsync()
+    {
+        _dotNetRef?.Dispose();
+    }
+}

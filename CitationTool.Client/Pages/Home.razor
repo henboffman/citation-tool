@@ -1,0 +1,177 @@
+@page "/"
+@inject ICitationService CitationService
+@inject IDomainService DomainService
+
+<PageTitle>Citation Manager - Home</PageTitle>
+
+<div class="row mb-4">
+    <div class="col-12">
+        <h1 class="h3 mb-1">Dashboard</h1>
+        <p class="text-muted">Manage and organize your citations</p>
+    </div>
+</div>
+
+@if (_isLoading)
+{
+    <LoadingSpinner Message="Loading dashboard..." />
+}
+else
+{
+    <div class="row g-4 mb-4">
+        <div class="col-md-4">
+            <div class="card stat-card">
+                <div class="stat-value text-primary">@_citationCount</div>
+                <div class="stat-label">Total Citations</div>
+            </div>
+        </div>
+        <div class="col-md-4">
+            <div class="card stat-card">
+                <div class="stat-value text-success">@_domainCount</div>
+                <div class="stat-label">Domains</div>
+            </div>
+        </div>
+        <div class="col-md-4">
+            <div class="card stat-card">
+                <div class="stat-value text-warning">@_unhealthyUrlCount</div>
+                <div class="stat-label">URLs Need Attention</div>
+            </div>
+        </div>
+    </div>
+
+    <div class="row g-4">
+        <div class="col-lg-8">
+            <div class="card">
+                <div class="card-header d-flex justify-content-between align-items-center">
+                    <h5 class="mb-0">
+                        <i class="bi bi-clock-history me-2"></i>Recent Citations
+                    </h5>
+                    <a href="/citations" class="btn btn-sm btn-outline-primary">View All</a>
+                </div>
+                <div class="card-body">
+                    @if (_recentCitations.Count == 0)
+                    {
+                        <EmptyState Icon="bi-journal-text" Title="No citations yet"
+                                    Message="Add your first citation to get started."
+                                    ActionText="Add Citation" ActionUrl="/citations/new" ActionIcon="bi-plus-lg" />
+                    }
+                    else
+                    {
+                        @foreach (var citation in _recentCitations)
+                        {
+                            <div class="d-flex justify-content-between align-items-start py-2 border-bottom">
+                                <div>
+                                    <a href="/citations/@citation.Id" class="text-decoration-none fw-medium">
+                                        @citation.Title
+                                    </a>
+                                    <div class="small text-muted">
+                                        @citation.AuthorsDisplay
+                                        @if (citation.Year.HasValue)
+                                        {
+                                            <span class="mx-1">-</span>@citation.Year
+                                        }
+                                    </div>
+                                </div>
+                                <small class="text-muted">@citation.DateAdded.ToString("MMM d")</small>
+                            </div>
+                        }
+                    }
+                </div>
+            </div>
+        </div>
+
+        <div class="col-lg-4">
+            <div class="card mb-4">
+                <div class="card-header">
+                    <h5 class="mb-0">
+                        <i class="bi bi-lightning me-2"></i>Quick Actions
+                    </h5>
+                </div>
+                <div class="card-body">
+                    <div class="d-grid gap-2">
+                        <a href="/citations/new" class="btn btn-primary">
+                            <i class="bi bi-plus-lg me-2"></i>Add New Citation
+                        </a>
+                        <a href="/import" class="btn btn-outline-secondary">
+                            <i class="bi bi-upload me-2"></i>Import Citations
+                        </a>
+                        <a href="/export" class="btn btn-outline-secondary">
+                            <i class="bi bi-download me-2"></i>Export Citations
+                        </a>
+                    </div>
+                </div>
+            </div>
+
+            <div class="card">
+                <div class="card-header d-flex justify-content-between align-items-center">
+                    <h5 class="mb-0">
+                        <i class="bi bi-folder me-2"></i>Domains
+                    </h5>
+                    <a href="/domains" class="btn btn-sm btn-outline-primary">Manage</a>
+                </div>
+                <div class="card-body">
+                    @if (_domains.Count == 0)
+                    {
+                        <p class="text-muted small mb-2">No domains created yet.</p>
+                        <a href="/domains" class="btn btn-sm btn-outline-secondary">
+                            <i class="bi bi-plus-lg me-1"></i>Create Domain
+                        </a>
+                    }
+                    else
+                    {
+                        @foreach (var item in _domainCounts.Take(5))
+                        {
+                            <div class="d-flex justify-content-between align-items-center py-2 border-bottom">
+                                <span class="d-flex align-items-center">
+                                    <span class="domain-indicator" style="background-color: @item.Domain.Color;"></span>
+                                    @item.Domain.Name
+                                </span>
+                                <span class="badge bg-secondary">@item.Count</span>
+                            </div>
+                        }
+                    }
+                </div>
+            </div>
+        </div>
+    </div>
+}
+
+@code {
+    private int _citationCount;
+    private int _domainCount;
+    private int _unhealthyUrlCount;
+    private List<Citation> _recentCitations = new();
+    private List<Domain> _domains = new();
+    private List<(Domain Domain, int Count)> _domainCounts = new();
+    private bool _isLoading = true;
+
+    protected override async Task OnInitializedAsync()
+    {
+        try
+        {
+            var citations = await CitationService.GetAllAsync();
+            _domains = await DomainService.GetAllAsync();
+            var domainCitationCounts = await DomainService.GetCitationCountsAsync();
+
+            _citationCount = citations.Count;
+            _domainCount = _domains.Count;
+            _unhealthyUrlCount = citations.Count(c =>
+                c.LastHealthCheck != null &&
+                c.LastHealthCheck.Level != HealthLevel.Healthy &&
+                c.LastHealthCheck.Level != HealthLevel.Unknown);
+
+            _recentCitations = citations
+                .OrderByDescending(c => c.DateAdded)
+                .Take(5)
+                .ToList();
+
+            _domainCounts = _domains
+                .Select(d => (Domain: d, Count: domainCitationCounts.GetValueOrDefault(d.Id, 0)))
+                .OrderByDescending(x => x.Count)
+                .ToList();
+        }
+        finally
+        {
+            _isLoading = false;
+        }
+    }
+}

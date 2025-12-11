@@ -1,0 +1,277 @@
+@inject IDomainService DomainService
+
+<EditForm Model="@Citation" OnValidSubmit="HandleSubmit" class="needs-validation">
+    <DataAnnotationsValidator />
+
+    <div class="row g-3">
+        <div class="col-12">
+            <label for="title" class="form-label">Title <span class="text-danger">*</span></label>
+            <InputText id="title" @bind-Value="Citation.Title" class="form-control" placeholder="Enter the publication title" />
+            <ValidationMessage For="@(() => Citation.Title)" class="invalid-feedback d-block" />
+        </div>
+
+        <div class="col-md-6">
+            <label for="type" class="form-label">Citation Type <span class="text-danger">*</span></label>
+            <InputSelect id="type" @bind-Value="Citation.Type" class="form-select">
+                @foreach (var type in Enum.GetValues<CitationType>())
+                {
+                    <option value="@type">@type.GetDisplayName()</option>
+                }
+            </InputSelect>
+        </div>
+
+        <div class="col-md-6">
+            <label for="domain" class="form-label">Domain</label>
+            <InputSelect id="domain" @bind-Value="Citation.DomainId" class="form-select">
+                <option value="">-- Select Domain --</option>
+                @foreach (var domain in _domains)
+                {
+                    <option value="@domain.Id">@domain.Name</option>
+                }
+            </InputSelect>
+        </div>
+
+        <div class="col-12">
+            <label class="form-label">Authors <span class="text-danger">*</span></label>
+            <div class="d-flex flex-wrap gap-2 mb-2">
+                @for (var i = 0; i < Citation.Authors.Count; i++)
+                {
+                    var index = i;
+                    <div class="input-group" style="width: auto; min-width: 200px;">
+                        <input type="text" class="form-control" value="@Citation.Authors[index]"
+                               @onchange="@(e => UpdateAuthor(index, e.Value?.ToString() ?? string.Empty))"
+                               placeholder="Author name" />
+                        <button type="button" class="btn btn-outline-danger" @onclick="() => RemoveAuthor(index)"
+                                aria-label="Remove author" title="Remove author">
+                            <i class="bi bi-x-lg"></i>
+                        </button>
+                    </div>
+                }
+            </div>
+            <button type="button" class="btn btn-outline-secondary btn-sm" @onclick="AddAuthor">
+                <i class="bi bi-plus-lg me-1"></i>
+                Add Author
+            </button>
+            @if (Citation.Authors.Count == 0)
+            {
+                <div class="text-danger small mt-1">At least one author is required.</div>
+            }
+        </div>
+
+        <div class="col-md-8">
+            <label for="journal" class="form-label">
+                @(Citation.Type == CitationType.InProceedings ? "Conference" : "Journal/Publication")
+            </label>
+            <InputText id="journal" @bind-Value="Citation.JournalOrConference" class="form-control"
+                       placeholder="@(Citation.Type == CitationType.InProceedings ? "Conference name" : "Journal name")" />
+        </div>
+
+        <div class="col-md-4">
+            <label for="year" class="form-label">Year</label>
+            <InputNumber id="year" @bind-Value="Citation.Year" class="form-control" placeholder="e.g., 2024" />
+            <ValidationMessage For="@(() => Citation.Year)" class="invalid-feedback d-block" />
+        </div>
+
+        <div class="col-md-3">
+            <label for="volume" class="form-label">Volume</label>
+            <InputText id="volume" @bind-Value="Citation.Volume" class="form-control" placeholder="e.g., 12" />
+        </div>
+
+        <div class="col-md-3">
+            <label for="issue" class="form-label">Issue</label>
+            <InputText id="issue" @bind-Value="Citation.Issue" class="form-control" placeholder="e.g., 4" />
+        </div>
+
+        <div class="col-md-3">
+            <label for="pages" class="form-label">Pages</label>
+            <InputText id="pages" @bind-Value="Citation.Pages" class="form-control" placeholder="e.g., 123-145" />
+            <ValidationMessage For="@(() => Citation.Pages)" class="invalid-feedback d-block" />
+        </div>
+
+        <div class="col-md-3">
+            <label for="month" class="form-label">Month</label>
+            <InputSelect id="month" @bind-Value="Citation.Month" class="form-select">
+                <option value="">-- Select --</option>
+                <option value="Jan">January</option>
+                <option value="Feb">February</option>
+                <option value="Mar">March</option>
+                <option value="Apr">April</option>
+                <option value="May">May</option>
+                <option value="Jun">June</option>
+                <option value="Jul">July</option>
+                <option value="Aug">August</option>
+                <option value="Sep">September</option>
+                <option value="Oct">October</option>
+                <option value="Nov">November</option>
+                <option value="Dec">December</option>
+            </InputSelect>
+        </div>
+
+        <div class="col-md-6">
+            <label for="doi" class="form-label">DOI</label>
+            <InputText id="doi" @bind-Value="Citation.Doi" class="form-control" placeholder="e.g., 10.1109/ACCESS.2020.1234567" />
+            <ValidationMessage For="@(() => Citation.Doi)" class="invalid-feedback d-block" />
+            <div class="form-text">Digital Object Identifier for the publication</div>
+        </div>
+
+        <div class="col-md-6">
+            <label for="url" class="form-label">URL</label>
+            <InputText id="url" @bind-Value="Citation.Url" class="form-control" placeholder="https://..." />
+            <ValidationMessage For="@(() => Citation.Url)" class="invalid-feedback d-block" />
+        </div>
+
+        <div class="col-md-6">
+            <label for="publisher" class="form-label">Publisher</label>
+            <InputText id="publisher" @bind-Value="Citation.Publisher" class="form-control" placeholder="e.g., IEEE, ACM" />
+        </div>
+
+        <div class="col-md-6">
+            <label for="isbn" class="form-label">ISBN</label>
+            <InputText id="isbn" @bind-Value="Citation.Isbn" class="form-control" placeholder="e.g., 978-3-16-148410-0" />
+            <ValidationMessage For="@(() => Citation.Isbn)" class="invalid-feedback d-block" />
+        </div>
+
+        <div class="col-12">
+            <label for="abstract" class="form-label">Abstract</label>
+            <InputTextArea id="abstract" @bind-Value="Citation.Abstract" class="form-control" rows="4"
+                           placeholder="Enter the publication abstract..." />
+            <ValidationMessage For="@(() => Citation.Abstract)" class="invalid-feedback d-block" />
+        </div>
+
+        <div class="col-12">
+            <label for="notes" class="form-label">Personal Notes</label>
+            <InputTextArea id="notes" @bind-Value="Citation.Notes" class="form-control" rows="3"
+                           placeholder="Add your notes about this citation..." />
+            <ValidationMessage For="@(() => Citation.Notes)" class="invalid-feedback d-block" />
+        </div>
+
+        <div class="col-12">
+            <label class="form-label">Tags</label>
+            <div class="d-flex flex-wrap gap-2 mb-2">
+                @foreach (var tag in Citation.Tags)
+                {
+                    <span class="badge bg-secondary d-flex align-items-center">
+                        @tag
+                        <button type="button" class="btn-close btn-close-white ms-2" style="font-size: 0.6rem;"
+                                @onclick="() => RemoveTag(tag)" aria-label="Remove tag @tag"></button>
+                    </span>
+                }
+            </div>
+            <div class="input-group" style="max-width: 300px;">
+                <input type="text" class="form-control" placeholder="Add a tag..."
+                       @bind="_newTag" @onkeydown="HandleTagKeyDown" />
+                <button type="button" class="btn btn-outline-secondary" @onclick="AddTag">
+                    <i class="bi bi-plus-lg"></i>
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <hr class="my-4" />
+
+    <div class="d-flex gap-2">
+        <button type="submit" class="btn btn-primary" disabled="@IsSubmitting">
+            @if (IsSubmitting)
+            {
+                <span class="spinner-border spinner-border-sm me-2" role="status" aria-hidden="true"></span>
+            }
+            <i class="bi bi-check-lg me-2"></i>
+            @(IsEdit ? "Update Citation" : "Add Citation")
+        </button>
+        <button type="button" class="btn btn-outline-secondary" @onclick="OnCancel">
+            Cancel
+        </button>
+    </div>
+
+    @if (ValidationErrors.Count > 0)
+    {
+        <div class="alert alert-danger mt-3" role="alert">
+            <h6 class="alert-heading">
+                <i class="bi bi-exclamation-triangle me-2"></i>
+                Please correct the following errors:
+            </h6>
+            <ul class="mb-0">
+                @foreach (var error in ValidationErrors)
+                {
+                    <li>@error</li>
+                }
+            </ul>
+        </div>
+    }
+</EditForm>
+
+@code {
+    [Parameter] public Citation Citation { get; set; } = new();
+    [Parameter] public bool IsEdit { get; set; }
+    [Parameter] public bool IsSubmitting { get; set; }
+    [Parameter] public List<string> ValidationErrors { get; set; } = new();
+    [Parameter] public EventCallback<Citation> OnSubmit { get; set; }
+    [Parameter] public EventCallback OnCancel { get; set; }
+
+    private List<Domain> _domains = new();
+    private string _newTag = "";
+
+    protected override async Task OnInitializedAsync()
+    {
+        _domains = await DomainService.GetAllAsync();
+
+        if (Citation.Authors.Count == 0)
+        {
+            Citation.Authors.Add("");
+        }
+    }
+
+    private async Task HandleSubmit()
+    {
+        // Remove empty authors
+        Citation.Authors = Citation.Authors.Where(a => !string.IsNullOrWhiteSpace(a)).ToList();
+
+        if (OnSubmit.HasDelegate)
+        {
+            await OnSubmit.InvokeAsync(Citation);
+        }
+    }
+
+    private void AddAuthor()
+    {
+        Citation.Authors.Add("");
+    }
+
+    private void RemoveAuthor(int index)
+    {
+        if (Citation.Authors.Count > 1)
+        {
+            Citation.Authors.RemoveAt(index);
+        }
+    }
+
+    private void UpdateAuthor(int index, string value)
+    {
+        if (index < Citation.Authors.Count)
+        {
+            Citation.Authors[index] = value;
+        }
+    }
+
+    private void AddTag()
+    {
+        if (!string.IsNullOrWhiteSpace(_newTag) && !Citation.Tags.Contains(_newTag, StringComparer.OrdinalIgnoreCase))
+        {
+            Citation.Tags.Add(_newTag.Trim());
+            _newTag = "";
+        }
+    }
+
+    private void RemoveTag(string tag)
+    {
+        Citation.Tags.Remove(tag);
+    }
+
+    private void HandleTagKeyDown(KeyboardEventArgs e)
+    {
+        if (e.Key == "Enter")
+        {
+            AddTag();
+        }
+    }
+}

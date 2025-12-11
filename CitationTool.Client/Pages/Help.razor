@@ -1,0 +1,301 @@
+@page "/help"
+
+<PageTitle>Help - Citation Manager</PageTitle>
+
+<div class="row mb-4">
+    <div class="col-12">
+        <h1 class="h3 mb-1">Help &amp; Documentation</h1>
+        <p class="text-muted mb-0">Learn how to use Citation Manager effectively</p>
+    </div>
+</div>
+
+<div class="row">
+    <div class="col-lg-10 col-xl-8 mx-auto">
+        <div class="card mb-4" id="getting-started">
+            <div class="card-header">
+                <h5 class="mb-0">
+                    <i class="bi bi-rocket-takeoff me-2"></i>Getting Started
+                </h5>
+            </div>
+            <div class="card-body">
+                <p>
+                    Citation Manager helps you organize, search, and manage your academic and professional citations.
+                    The application is designed for IT professionals who frequently reference publications across various domains.
+                </p>
+                <h6 class="fw-bold mt-4">Quick Start</h6>
+                <ol>
+                    <li><strong>Browse Pre-seeded Citations:</strong> The app comes with 200+ important IT publications across multiple domains.</li>
+                    <li><strong>Add Your Own:</strong> Click "Add Citation" on the Citations page to add new references.</li>
+                    <li><strong>Organize by Domain:</strong> Create custom domains to categorize your citations.</li>
+                    <li><strong>Search &amp; Filter:</strong> Use the search bar or filter panel to find specific citations.</li>
+                    <li><strong>Export:</strong> Export your citations in CSV, JSON, or BibTeX format for use in other tools.</li>
+                </ol>
+            </div>
+        </div>
+
+        <div class="card mb-4" id="citations">
+            <div class="card-header">
+                <h5 class="mb-0">
+                    <i class="bi bi-journal-text me-2"></i>Managing Citations
+                </h5>
+            </div>
+            <div class="card-body">
+                <h6 class="fw-bold">Adding a Citation</h6>
+                <p>To add a new citation:</p>
+                <ol>
+                    <li>Navigate to <a href="/citations">Citations</a></li>
+                    <li>Click the "Add Citation" button</li>
+                    <li>Fill in the required fields (Title, Authors)</li>
+                    <li>Select the appropriate citation type (Article, Book, Conference Paper, etc.)</li>
+                    <li>Add optional fields like DOI, URL, abstract, and tags</li>
+                    <li>Click "Add Citation" to save</li>
+                </ol>
+
+                <h6 class="fw-bold mt-4">Citation Types</h6>
+                <p>The following citation types are supported, matching IEEE/ACM standards:</p>
+                <div class="row">
+                    <div class="col-md-6">
+                        <ul class="small">
+                            <li><strong>Article:</strong> Journal articles</li>
+                            <li><strong>InProceedings:</strong> Conference papers</li>
+                            <li><strong>Book:</strong> Complete books</li>
+                            <li><strong>InBook:</strong> Book chapters</li>
+                            <li><strong>TechReport:</strong> Technical reports</li>
+                            <li><strong>Website:</strong> Web resources</li>
+                        </ul>
+                    </div>
+                    <div class="col-md-6">
+                        <ul class="small">
+                            <li><strong>Standard:</strong> IEEE/ISO standards</li>
+                            <li><strong>Patent:</strong> Patents</li>
+                            <li><strong>Thesis:</strong> PhD/Master's theses</li>
+                            <li><strong>Manual:</strong> Technical manuals</li>
+                            <li><strong>Misc:</strong> Other publications</li>
+                        </ul>
+                    </div>
+                </div>
+
+                <h6 class="fw-bold mt-4">Editing and Deleting</h6>
+                <p>
+                    Click on any citation to view its details. From the detail view, you can edit or delete the citation
+                    using the buttons in the top-right corner. You can also access these actions from the dropdown menu
+                    on each citation card.
+                </p>
+            </div>
+        </div>
+
+        <div class="card mb-4" id="domains">
+            <div class="card-header">
+                <h5 class="mb-0">
+                    <i class="bi bi-folder me-2"></i>Organizing with Domains
+                </h5>
+            </div>
+            <div class="card-body">
+                <p>
+                    Domains help you categorize citations by research area or topic. Each citation can be assigned to one domain.
+                </p>
+
+                <h6 class="fw-bold mt-4">Pre-configured Domains</h6>
+                <p>The application includes these pre-configured domains:</p>
+                <ul class="small">
+                    <li>Software Engineering</li>
+                    <li>Artificial Intelligence</li>
+                    <li>Security</li>
+                    <li>DevOps &amp; Lifecycle</li>
+                    <li>LLM &amp; Agents</li>
+                    <li>Distributed Systems</li>
+                    <li>Data Engineering</li>
+                    <li>Human-Computer Interaction</li>
+                    <li>Cloud Computing</li>
+                    <li>Networking</li>
+                    <li>Database Systems</li>
+                    <li>Programming Languages</li>
+                    <li>Testing &amp; Quality</li>
+                    <li>Web Development</li>
+                </ul>
+
+                <h6 class="fw-bold mt-4">Creating Custom Domains</h6>
+                <ol>
+                    <li>Go to the <a href="/domains">Domains</a> page</li>
+                    <li>Click "Create Domain"</li>
+                    <li>Enter a name and optional description</li>
+                    <li>Choose a color for visual identification</li>
+                    <li>Click "Create Domain" to save</li>
+                </ol>
+
+                <h6 class="fw-bold mt-4">Viewing Citations by Domain</h6>
+                <p>
+                    Click on any domain card to view all citations in that domain. You can also click on the domain
+                    badge on any citation card to filter by that domain.
+                </p>
+            </div>
+        </div>
+
+        <div class="card mb-4" id="search">
+            <div class="card-header">
+                <h5 class="mb-0">
+                    <i class="bi bi-search me-2"></i>Search &amp; Filter
+                </h5>
+            </div>
+            <div class="card-body">
+                <h6 class="fw-bold">Text Search</h6>
+                <p>
+                    The search feature searches across multiple fields: title, authors, abstract, DOI, notes, and tags.
+                    Results update as you type.
+                </p>
+
+                <h6 class="fw-bold mt-4">Filtering Options</h6>
+                <p>Use the filter panel on the left side of the Citations page to narrow results:</p>
+                <ul>
+                    <li><strong>Domain:</strong> Show citations from a specific domain</li>
+                    <li><strong>Citation Type:</strong> Filter by article, book, conference paper, etc.</li>
+                    <li><strong>Year Range:</strong> Show citations from a specific time period</li>
+                </ul>
+
+                <h6 class="fw-bold mt-4">Sorting</h6>
+                <p>Sort your citations by:</p>
+                <ul class="small">
+                    <li>Date Added (newest/oldest first)</li>
+                    <li>Title (A-Z / Z-A)</li>
+                    <li>Year (newest/oldest publications)</li>
+                    <li>Author (alphabetically)</li>
+                </ul>
+
+                <h6 class="fw-bold mt-4">Quick Search</h6>
+                <p>
+                    Click the Search button in the navigation bar to open the quick search dialog.
+                    Start typing to find citations instantly by title, author, DOI, or tags.
+                </p>
+            </div>
+        </div>
+
+        <div class="card mb-4" id="import-export">
+            <div class="card-header">
+                <h5 class="mb-0">
+                    <i class="bi bi-arrow-left-right me-2"></i>Import &amp; Export
+                </h5>
+            </div>
+            <div class="card-body">
+                <h6 class="fw-bold">Importing Citations</h6>
+                <p>Import citations from three formats:</p>
+                <ul>
+                    <li><strong>CSV:</strong> Spreadsheet format with column headers matching citation fields</li>
+                    <li><strong>JSON:</strong> Structured format matching the application's schema</li>
+                    <li><strong>BibTeX:</strong> Standard academic citation format</li>
+                </ul>
+                <p>To import:</p>
+                <ol>
+                    <li>Go to <a href="/import">Import</a></li>
+                    <li>Select the file format</li>
+                    <li>Choose your file (max 5MB)</li>
+                    <li>Preview the content and click "Import Citations"</li>
+                </ol>
+
+                <h6 class="fw-bold mt-4">Exporting Citations</h6>
+                <p>Export your citations for use in other applications:</p>
+                <ol>
+                    <li>Go to <a href="/export">Export</a></li>
+                    <li>Select the export format (CSV, JSON, or BibTeX)</li>
+                    <li>Optionally filter by domain or citation type</li>
+                    <li>Click "Export" to generate the file</li>
+                    <li>Click "Download File" to save</li>
+                </ol>
+
+                <div class="alert alert-info mt-3">
+                    <i class="bi bi-info-circle me-2"></i>
+                    <strong>Tip:</strong> BibTeX export is compatible with LaTeX, Overleaf, and most reference managers like Zotero and Mendeley.
+                </div>
+            </div>
+        </div>
+
+        <div class="card mb-4" id="url-health">
+            <div class="card-header">
+                <h5 class="mb-0">
+                    <i class="bi bi-heart-pulse me-2"></i>URL Health Checking
+                </h5>
+            </div>
+            <div class="card-body">
+                <p>
+                    Citation Manager can check the health of URLs in your citations to identify broken links.
+                </p>
+
+                <h6 class="fw-bold mt-4">Health Status Indicators</h6>
+                <div class="row">
+                    <div class="col-md-6">
+                        <ul class="list-unstyled">
+                            <li><i class="bi bi-check-circle text-success me-2"></i><strong>Healthy (200):</strong> URL is accessible</li>
+                            <li><i class="bi bi-exclamation-circle text-warning me-2"></i><strong>Redirect (3xx):</strong> URL redirects</li>
+                        </ul>
+                    </div>
+                    <div class="col-md-6">
+                        <ul class="list-unstyled">
+                            <li><i class="bi bi-x-circle text-danger me-2"></i><strong>Error (4xx/5xx):</strong> URL is broken</li>
+                            <li><i class="bi bi-question-circle text-secondary me-2"></i><strong>Unchecked:</strong> Not yet verified</li>
+                        </ul>
+                    </div>
+                </div>
+
+                <h6 class="fw-bold mt-4">Running Health Checks</h6>
+                <p>
+                    Health checks can be triggered from the <a href="/settings">Settings</a> page.
+                    You can check all URLs at once or configure automatic periodic checks.
+                </p>
+            </div>
+        </div>
+
+        <div class="card mb-4" id="data-storage">
+            <div class="card-header">
+                <h5 class="mb-0">
+                    <i class="bi bi-database me-2"></i>Data Storage
+                </h5>
+            </div>
+            <div class="card-body">
+                <h6 class="fw-bold">Browser Storage (IndexedDB)</h6>
+                <p>
+                    Your citations are stored locally in your browser using IndexedDB. This means:
+                </p>
+                <ul>
+                    <li>Your data stays on your device</li>
+                    <li>The app works offline</li>
+                    <li>Data persists between sessions</li>
+                    <li>No account or cloud storage required</li>
+                </ul>
+
+                <h6 class="fw-bold mt-4">Backup &amp; Restore</h6>
+                <p>
+                    To protect your data:
+                </p>
+                <ul>
+                    <li><strong>Export regularly:</strong> Use the Export feature to create backups in JSON format</li>
+                    <li><strong>Download backups:</strong> Go to <a href="/settings">Settings</a> to download a complete database backup</li>
+                    <li><strong>Restore from backup:</strong> Use the Import feature to restore from a JSON backup</li>
+                </ul>
+
+                <div class="alert alert-warning mt-3">
+                    <i class="bi bi-exclamation-triangle me-2"></i>
+                    <strong>Important:</strong> Clearing your browser data or using private/incognito mode will remove your stored citations.
+                    Always maintain backups of important data.
+                </div>
+            </div>
+        </div>
+
+        <div class="card">
+            <div class="card-header">
+                <h5 class="mb-0">
+                    <i class="bi bi-question-circle me-2"></i>Need More Help?
+                </h5>
+            </div>
+            <div class="card-body">
+                <p>
+                    If you encounter issues or have questions:
+                </p>
+                <ul>
+                    <li>Check that you're using a modern browser (Chrome, Firefox, Edge, Safari)</li>
+                    <li>Ensure JavaScript is enabled</li>
+                    <li>Try refreshing the page if something seems stuck</li>
+                    <li>Export your data before clearing browser cache</li>
+                </ul>
+            </div>
+        </div>
+    </div>
+</div>

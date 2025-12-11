@@ -1,0 +1,255 @@
+@page "/import"
+@inject IImportExportService ImportExportService
+@inject ICitationService CitationService
+@inject IJSRuntime JS
+
+<PageTitle>Import Citations - Citation Manager</PageTitle>
+
+<div class="row mb-4">
+    <div class="col-12">
+        <h1 class="h3 mb-1">Import Citations</h1>
+        <p class="text-muted mb-0">Import citations from CSV, JSON, or BibTeX files</p>
+    </div>
+</div>
+
+<div class="row">
+    <div class="col-lg-8">
+        <div class="card mb-4">
+            <div class="card-header">
+                <h5 class="mb-0">
+                    <i class="bi bi-upload me-2"></i>Upload File
+                </h5>
+            </div>
+            <div class="card-body">
+                <div class="mb-3">
+                    <label for="importFormat" class="form-label">File Format</label>
+                    <select id="importFormat" class="form-select" @bind="_selectedFormat">
+                        <option value="@ImportFormat.Csv">CSV (Comma-Separated Values)</option>
+                        <option value="@ImportFormat.Json">JSON</option>
+                        <option value="@ImportFormat.BibTeX">BibTeX</option>
+                    </select>
+                </div>
+
+                <div class="mb-3">
+                    <label for="fileInput" class="form-label">Select File</label>
+                    <InputFile id="fileInput" class="form-control" OnChange="HandleFileSelected"
+                               accept="@GetAcceptedTypes()" />
+                    <div class="form-text">Maximum file size: 5MB</div>
+                </div>
+
+                @if (!string.IsNullOrEmpty(_fileContent))
+                {
+                    <div class="mb-3">
+                        <label class="form-label">Preview</label>
+                        <pre class="bg-light p-3 rounded small" style="max-height: 200px; overflow-y: auto;">@_fileContent.Substring(0, Math.Min(_fileContent.Length, 2000))@(_fileContent.Length > 2000 ? "..." : "")</pre>
+                    </div>
+                }
+
+                <button class="btn btn-primary" @onclick="ProcessImport" disabled="@(_isProcessing || string.IsNullOrEmpty(_fileContent))">
+                    @if (_isProcessing)
+                    {
+                        <span class="spinner-border spinner-border-sm me-2" role="status" aria-hidden="true"></span>
+                        <text>Processing</text>
+                    }
+                    else
+                    {
+                        <i class="bi bi-file-earmark-arrow-up me-2"></i>
+                        <text>Import Citations</text>
+                    }
+                </button>
+            </div>
+        </div>
+
+        @if (_importResult != null)
+        {
+            <div class="card @(_importResult.Success ? "border-success" : "border-danger")">
+                <div class="card-header @(_importResult.Success ? "bg-success text-white" : "bg-danger text-white")">
+                    <h5 class="mb-0">
+                        <i class="bi @(_importResult.Success ? "bi-check-circle" : "bi-x-circle") me-2"></i>
+                        Import @(_importResult.Success ? "Complete" : "Failed")
+                    </h5>
+                </div>
+                <div class="card-body">
+                    <div class="row text-center mb-3">
+                        <div class="col-4">
+                            <div class="h4 mb-0">@_importResult.TotalRecords</div>
+                            <small class="text-muted">Total Records</small>
+                        </div>
+                        <div class="col-4">
+                            <div class="h4 mb-0 text-success">@_importResult.ImportedCount</div>
+                            <small class="text-muted">Imported</small>
+                        </div>
+                        <div class="col-4">
+                            <div class="h4 mb-0 text-danger">@_importResult.ErrorCount</div>
+                            <small class="text-muted">Errors</small>
+                        </div>
+                    </div>
+
+                    @if (_importResult.Errors.Count > 0)
+                    {
+                        <div class="alert alert-warning">
+                            <h6 class="alert-heading">Errors Encountered:</h6>
+                            <ul class="mb-0 small">
+                                @foreach (var error in _importResult.Errors.Take(10))
+                                {
+                                    <li>
+                                        @if (error.Row > 0)
+                                        {
+                                            <strong>Row @error.Row:</strong>
+                                        }
+                                        @error.Message
+                                    </li>
+                                }
+                                @if (_importResult.Errors.Count > 10)
+                                {
+                                    <li>...and @(_importResult.Errors.Count - 10) more errors</li>
+                                }
+                            </ul>
+                        </div>
+                    }
+
+                    @if (_importResult.Success)
+                    {
+                        <a href="/citations" class="btn btn-outline-success">
+                            <i class="bi bi-journal-text me-2"></i>View Citations
+                        </a>
+                    }
+                </div>
+            </div>
+        }
+    </div>
+
+    <div class="col-lg-4">
+        <div class="card">
+            <div class="card-header">
+                <h5 class="mb-0">Format Guide</h5>
+            </div>
+            <div class="card-body">
+                @switch (_selectedFormat)
+                {
+                    case ImportFormat.Csv:
+                        <h6>CSV Format</h6>
+                        <p class="small text-muted">
+                            Your CSV should have a header row with column names. Supported columns:
+                        </p>
+                        <ul class="small text-muted">
+                            <li><strong>Title</strong> (required)</li>
+                            <li><strong>Authors</strong> (semicolon-separated)</li>
+                            <li><strong>Type</strong> (Article, Book, etc.)</li>
+                            <li><strong>Year</strong></li>
+                            <li><strong>Journal</strong> or <strong>Conference</strong></li>
+                            <li><strong>Volume, Issue, Pages</strong></li>
+                            <li><strong>DOI, URL, ISBN</strong></li>
+                            <li><strong>Abstract, Notes</strong></li>
+                            <li><strong>Tags</strong> (semicolon-separated)</li>
+                        </ul>
+                        break;
+
+                    case ImportFormat.Json:
+                        <h6>JSON Format</h6>
+                        <p class="small text-muted">
+                            Provide a JSON array of citation objects. Example:
+                        </p>
+                        <pre class="bg-light p-2 rounded small">[
+  {
+    "title": "Paper Title",
+    "authors": ["Author 1"],
+    "type": "Article",
+    "year": 2024
+  }
+]</pre>
+                        break;
+
+                    case ImportFormat.BibTeX:
+                        <h6>BibTeX Format</h6>
+                        <p class="small text-muted">
+                            Standard BibTeX format is supported. Example:
+                        </p>
+                        <pre class="bg-light p-2 rounded small">@("@")article{key,
+  title = {Paper Title},
+  author = {Last, First},
+  year = {2024},
+  journal = {Journal Name}
+}</pre>
+                        break;
+                }
+            </div>
+        </div>
+    </div>
+</div>
+
+@code {
+    private ImportFormat _selectedFormat = ImportFormat.Csv;
+    private string _fileContent = "";
+    private bool _isProcessing;
+    private ImportResult? _importResult;
+
+    private string GetAcceptedTypes() => _selectedFormat switch
+    {
+        ImportFormat.Csv => ".csv",
+        ImportFormat.Json => ".json",
+        ImportFormat.BibTeX => ".bib,.bibtex,.txt",
+        _ => "*"
+    };
+
+    private async Task HandleFileSelected(InputFileChangeEventArgs e)
+    {
+        _importResult = null;
+        _fileContent = "";
+
+        var file = e.File;
+        if (file.Size > 5 * 1024 * 1024)
+        {
+            _importResult = new ImportResult
+            {
+                Success = false,
+                Errors = { new ImportError { Message = "File size exceeds 5MB limit. Please use a smaller file." } }
+            };
+            return;
+        }
+
+        try
+        {
+            using var stream = file.OpenReadStream(maxAllowedSize: 5 * 1024 * 1024);
+            using var reader = new StreamReader(stream);
+            _fileContent = await reader.ReadToEndAsync();
+        }
+        catch (Exception ex)
+        {
+            _importResult = new ImportResult
+            {
+                Success = false,
+                Errors = { new ImportError { Message = $"Failed to read file: {ex.Message}" } }
+            };
+        }
+    }
+
+    private async Task ProcessImport()
+    {
+        if (string.IsNullOrEmpty(_fileContent)) return;
+
+        _isProcessing = true;
+        _importResult = null;
+
+        try
+        {
+            _importResult = _selectedFormat switch
+            {
+                ImportFormat.Csv => await ImportExportService.ImportCsvAsync(_fileContent),
+                ImportFormat.Json => await ImportExportService.ImportJsonAsync(_fileContent),
+                ImportFormat.BibTeX => await ImportExportService.ImportBibTeXAsync(_fileContent),
+                _ => new ImportResult { Success = false }
+            };
+
+            if (_importResult.Success && _importResult.ImportedCitations.Count > 0)
+            {
+                var count = await CitationService.BulkImportAsync(_importResult.ImportedCitations);
+                _importResult.ImportedCount = count;
+            }
+        }
+        finally
+        {
+            _isProcessing = false;
+        }
+    }
+}

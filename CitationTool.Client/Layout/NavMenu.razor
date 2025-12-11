@@ -1,0 +1,118 @@
+@inject NavigationManager Navigation
+@inject ICitationService CitationService
+@inject IDomainService DomainService
+
+<nav class="navbar navbar-expand-lg bg-white border-bottom shadow-sm">
+    <div class="container-fluid">
+        <a class="navbar-brand d-flex align-items-center" href="/">
+            <i class="bi bi-journal-bookmark-fill me-2 text-primary"></i>
+            <span class="fw-semibold">Citation Manager</span>
+        </a>
+
+        <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav"
+                aria-controls="navbarNav" aria-expanded="false" aria-label="Toggle navigation">
+            <span class="navbar-toggler-icon"></span>
+        </button>
+
+        <div class="collapse navbar-collapse" id="navbarNav">
+            <ul class="navbar-nav me-auto mb-2 mb-lg-0">
+                <li class="nav-item">
+                    <NavLink class="nav-link" href="" Match="NavLinkMatch.All">
+                        <i class="bi bi-house me-1"></i>
+                        Home
+                    </NavLink>
+                </li>
+                <li class="nav-item">
+                    <NavLink class="nav-link" href="citations">
+                        <i class="bi bi-journal-text me-1"></i>
+                        Citations
+                        @if (_citationCount > 0)
+                        {
+                            <span class="badge bg-secondary ms-1">@_citationCount</span>
+                        }
+                    </NavLink>
+                </li>
+                <li class="nav-item">
+                    <NavLink class="nav-link" href="domains">
+                        <i class="bi bi-folder me-1"></i>
+                        Domains
+                        @if (_domainCount > 0)
+                        {
+                            <span class="badge bg-secondary ms-1">@_domainCount</span>
+                        }
+                    </NavLink>
+                </li>
+                <li class="nav-item dropdown">
+                    <a class="nav-link dropdown-toggle" href="#" role="button" data-bs-toggle="dropdown" aria-expanded="false">
+                        <i class="bi bi-arrow-left-right me-1"></i>
+                        Import/Export
+                    </a>
+                    <ul class="dropdown-menu">
+                        <li>
+                            <NavLink class="dropdown-item" href="import">
+                                <i class="bi bi-upload me-2"></i>
+                                Import Citations
+                            </NavLink>
+                        </li>
+                        <li>
+                            <NavLink class="dropdown-item" href="export">
+                                <i class="bi bi-download me-2"></i>
+                                Export Citations
+                            </NavLink>
+                        </li>
+                    </ul>
+                </li>
+            </ul>
+
+            <div class="d-flex align-items-center">
+                <button class="btn btn-outline-secondary btn-sm me-2" type="button" @onclick="OpenQuickSearch"
+                        title="Quick Search">
+                    <i class="bi bi-search me-1"></i>
+                    Search
+                </button>
+                <NavLink class="btn btn-outline-secondary btn-sm me-2" href="help" title="Help & Documentation">
+                    <i class="bi bi-question-circle"></i>
+                    <span class="visually-hidden">Help</span>
+                </NavLink>
+                <NavLink class="btn btn-outline-secondary btn-sm" href="settings" title="Settings">
+                    <i class="bi bi-gear"></i>
+                    <span class="visually-hidden">Settings</span>
+                </NavLink>
+            </div>
+        </div>
+    </div>
+</nav>
+
+@code {
+    [CascadingParameter]
+    public MainLayout? Layout { get; set; }
+
+    private int _citationCount;
+    private int _domainCount;
+
+    protected override async Task OnInitializedAsync()
+    {
+        await LoadCounts();
+    }
+
+    private async Task LoadCounts()
+    {
+        try
+        {
+            var citations = await CitationService.GetAllAsync();
+            _citationCount = citations.Count;
+
+            var domains = await DomainService.GetAllAsync();
+            _domainCount = domains.Count;
+        }
+        catch
+        {
+            // Silently handle errors on initial load
+        }
+    }
+
+    private void OpenQuickSearch()
+    {
+        Layout?.OpenQuickSearch();
+    }
+}

@@ -1,0 +1,121 @@
+@implements IDisposable
+
+<div class="toast-container" aria-live="polite" aria-atomic="true">
+    @foreach (var toast in _toasts)
+    {
+        <div class="toast show mb-2 @GetToastClass(toast.Type)" role="alert" aria-live="assertive" aria-atomic="true">
+            <div class="toast-header">
+                <i class="bi @GetIconClass(toast.Type) me-2"></i>
+                <strong class="me-auto">@toast.Title</strong>
+                <button type="button" class="btn-close" @onclick="() => RemoveToast(toast)" aria-label="Close"></button>
+            </div>
+            <div class="toast-body">
+                @toast.Message
+            </div>
+        </div>
+    }
+</div>
+
+@code {
+    private List<ToastMessage> _toasts = new();
+    private Timer? _timer;
+
+    protected override void OnInitialized()
+    {
+        _timer = new Timer(CheckExpiredToasts, null, 1000, 1000);
+    }
+
+    public void Show(string message, ToastType type = ToastType.Info, string? title = null, int durationMs = 5000)
+    {
+        var toast = new ToastMessage
+        {
+            Id = Guid.NewGuid(),
+            Message = message,
+            Title = title ?? GetDefaultTitle(type),
+            Type = type,
+            ExpiresAt = DateTime.UtcNow.AddMilliseconds(durationMs)
+        };
+
+        _toasts.Add(toast);
+        StateHasChanged();
+    }
+
+    public void ShowSuccess(string message, string? title = null) =>
+        Show(message, ToastType.Success, title);
+
+    public void ShowError(string message, string? title = null) =>
+        Show(message, ToastType.Error, title, 8000);
+
+    public void ShowWarning(string message, string? title = null) =>
+        Show(message, ToastType.Warning, title);
+
+    public void ShowInfo(string message, string? title = null) =>
+        Show(message, ToastType.Info, title);
+
+    private void RemoveToast(ToastMessage toast)
+    {
+        _toasts.Remove(toast);
+        StateHasChanged();
+    }
+
+    private void CheckExpiredToasts(object? state)
+    {
+        var now = DateTime.UtcNow;
+        var expired = _toasts.Where(t => t.ExpiresAt <= now).ToList();
+
+        if (expired.Count > 0)
+        {
+            foreach (var toast in expired)
+            {
+                _toasts.Remove(toast);
+            }
+            InvokeAsync(StateHasChanged);
+        }
+    }
+
+    private static string GetToastClass(ToastType type) => type switch
+    {
+        ToastType.Success => "border-success",
+        ToastType.Error => "border-danger",
+        ToastType.Warning => "border-warning",
+        _ => "border-info"
+    };
+
+    private static string GetIconClass(ToastType type) => type switch
+    {
+        ToastType.Success => "bi-check-circle-fill text-success",
+        ToastType.Error => "bi-x-circle-fill text-danger",
+        ToastType.Warning => "bi-exclamation-triangle-fill text-warning",
+        _ => "bi-info-circle-fill text-info"
+    };
+
+    private static string GetDefaultTitle(ToastType type) => type switch
+    {
+        ToastType.Success => "Success",
+        ToastType.Error => "Error",
+        ToastType.Warning => "Warning",
+        _ => "Information"
+    };
+
+    public void Dispose()
+    {
+        _timer?.Dispose();
+    }
+
+    private class ToastMessage
+    {
+        public Guid Id { get; set; }
+        public string Message { get; set; } = "";
+        public string Title { get; set; } = "";
+        public ToastType Type { get; set; }
+        public DateTime ExpiresAt { get; set; }
+    }
+
+    public enum ToastType
+    {
+        Info,
+        Success,
+        Warning,
+        Error
+    }
+}

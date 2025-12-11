@@ -1,0 +1,191 @@
+@inject IDomainService DomainService
+
+<div class="card card-citation mb-3" style="@GetBorderStyle()">
+    <div class="card-body">
+        <div class="d-flex justify-content-between align-items-start">
+            <div class="flex-grow-1">
+                <h5 class="card-title mb-1">
+                    <a href="/citations/@Citation.Id" class="text-decoration-none text-dark">
+                        @Citation.Title
+                    </a>
+                </h5>
+                <p class="card-text text-muted small mb-2">
+                    @Citation.AuthorsDisplay
+                    @if (Citation.Year.HasValue)
+                    {
+                        <span class="mx-1">|</span>
+                        <span>@Citation.Year</span>
+                    }
+                    @if (!string.IsNullOrEmpty(Citation.JournalOrConference))
+                    {
+                        <span class="mx-1">|</span>
+                        <em>@Citation.JournalOrConference</em>
+                    }
+                </p>
+            </div>
+
+            <div class="d-flex gap-1">
+                @if (!string.IsNullOrEmpty(Citation.Url))
+                {
+                    <div class="health-indicator" title="@GetHealthTooltip()">
+                        <i class="bi @GetHealthIcon() @GetHealthClass()"></i>
+                    </div>
+                }
+                <div class="dropdown">
+                    <button class="btn btn-link btn-sm text-muted p-0" type="button" data-bs-toggle="dropdown"
+                            aria-expanded="false" aria-label="Citation actions">
+                        <i class="bi bi-three-dots-vertical"></i>
+                    </button>
+                    <ul class="dropdown-menu dropdown-menu-end">
+                        <li>
+                            <a class="dropdown-item" href="/citations/@Citation.Id">
+                                <i class="bi bi-eye me-2"></i>View Details
+                            </a>
+                        </li>
+                        <li>
+                            <a class="dropdown-item" href="/citations/@Citation.Id/edit">
+                                <i class="bi bi-pencil me-2"></i>Edit
+                            </a>
+                        </li>
+                        <li>
+                            <button class="dropdown-item" @onclick="CopyFormatted">
+                                <i class="bi bi-clipboard me-2"></i>Copy Citation
+                            </button>
+                        </li>
+                        @if (!string.IsNullOrEmpty(Citation.Url))
+                        {
+                            <li>
+                                <a class="dropdown-item" href="@Citation.Url" target="_blank" rel="noopener">
+                                    <i class="bi bi-box-arrow-up-right me-2"></i>Open URL
+                                </a>
+                            </li>
+                        }
+                        @if (!string.IsNullOrEmpty(Citation.Doi))
+                        {
+                            <li>
+                                <a class="dropdown-item" href="https://doi.org/@Citation.Doi" target="_blank" rel="noopener">
+                                    <i class="bi bi-link-45deg me-2"></i>Open DOI
+                                </a>
+                            </li>
+                        }
+                        <li><hr class="dropdown-divider" /></li>
+                        <li>
+                            <button class="dropdown-item text-danger" @onclick="HandleDelete">
+                                <i class="bi bi-trash me-2"></i>Delete
+                            </button>
+                        </li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+
+        <div class="d-flex flex-wrap gap-2 align-items-center mt-2">
+            <span class="badge bg-light text-dark border">
+                <i class="bi @GetTypeIcon() me-1"></i>
+                @Citation.Type.GetDisplayName()
+            </span>
+
+            @if (_domain != null)
+            {
+                <a href="/citations?domain=@_domain.Id" class="domain-badge text-decoration-none" style="background-color: @(_domain.Color)20; color: @_domain.Color;">
+                    <span class="domain-indicator" style="background-color: @_domain.Color;"></span>
+                    @_domain.Name
+                </a>
+            }
+
+            @foreach (var tag in Citation.Tags.Take(3))
+            {
+                <span class="tag">@tag</span>
+            }
+            @if (Citation.Tags.Count > 3)
+            {
+                <span class="tag">+@(Citation.Tags.Count - 3) more</span>
+            }
+        </div>
+
+        @if (!string.IsNullOrEmpty(Citation.Abstract) && ShowAbstract)
+        {
+            <p class="card-text mt-3 small text-muted">
+                @(Citation.Abstract.Length > 200 ? Citation.Abstract.Substring(0, 200) + "..." : Citation.Abstract)
+            </p>
+        }
+    </div>
+</div>
+
+@code {
+    [Parameter] public Citation Citation { get; set; } = new();
+    [Parameter] public bool ShowAbstract { get; set; } = true;
+    [Parameter] public EventCallback<Citation> OnDelete { get; set; }
+    [Parameter] public EventCallback<string> OnCopy { get; set; }
+
+    private Domain? _domain;
+
+    protected override async Task OnParametersSetAsync()
+    {
+        if (Citation.DomainId.HasValue)
+        {
+            _domain = await DomainService.GetByIdAsync(Citation.DomainId.Value);
+        }
+    }
+
+    private string GetBorderStyle()
+    {
+        if (_domain != null)
+        {
+            return $"border-left-color: {_domain.Color};";
+        }
+        return "";
+    }
+
+    private string GetTypeIcon() => Citation.Type switch
+    {
+        CitationType.Article => "bi-journal-text",
+        CitationType.InProceedings => "bi-people",
+        CitationType.Book => "bi-book",
+        CitationType.InBook => "bi-bookmark",
+        CitationType.TechReport => "bi-file-earmark-text",
+        CitationType.Website => "bi-globe",
+        CitationType.Standard => "bi-award",
+        CitationType.Patent => "bi-lightbulb",
+        CitationType.Thesis => "bi-mortarboard",
+        CitationType.Manual => "bi-file-earmark-ruled",
+        _ => "bi-file-earmark"
+    };
+
+    private string GetHealthIcon()
+    {
+        if (Citation.LastHealthCheck == null)
+            return "bi-question-circle";
+        return Citation.LastHealthCheck.IconClass;
+    }
+
+    private string GetHealthClass()
+    {
+        if (Citation.LastHealthCheck == null)
+            return "text-secondary";
+        return Citation.LastHealthCheck.CssClass;
+    }
+
+    private string GetHealthTooltip()
+    {
+        if (Citation.LastHealthCheck == null)
+            return "URL not checked";
+        return $"{Citation.LastHealthCheck.StatusText} - Last checked: {Citation.LastHealthCheck.CheckedAt:g}";
+    }
+
+    private async Task HandleDelete()
+    {
+        if (OnDelete.HasDelegate)
+        {
+            await OnDelete.InvokeAsync(Citation);
+        }
+    }
+
+    private async Task CopyFormatted()
+    {
+        if (OnCopy.HasDelegate)
+        {
+            await OnCopy.InvokeAsync(Citation.FormattedCitation);
+        }
+    }
+}

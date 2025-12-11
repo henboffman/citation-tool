@@ -1,0 +1,239 @@
+@page "/domains"
+@inject IDomainService DomainService
+@inject ICitationService CitationService
+@inject NavigationManager Navigation
+
+<PageTitle>Domains - Citation Manager</PageTitle>
+
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <div>
+        <h1 class="h3 mb-1">Domains</h1>
+        <p class="text-muted mb-0">Organize your citations by research domain</p>
+    </div>
+    <button class="btn btn-primary" @onclick="ShowCreateForm">
+        <i class="bi bi-plus-lg me-2"></i>Create Domain
+    </button>
+</div>
+
+@if (_isLoading)
+{
+    <LoadingSpinner Message="Loading domains..." />
+}
+else
+{
+    <div class="row">
+        <div class="col-lg-8">
+            @if (_domains.Count == 0)
+            {
+                <EmptyState Icon="bi-folder" Title="No domains yet"
+                            Message="Create your first domain to start organizing your citations."
+                            ActionText="Create Domain" OnAction="ShowCreateForm" ActionIcon="bi-plus-lg" />
+            }
+            else
+            {
+                @foreach (var domain in _domains)
+                {
+                    var count = _citationCounts.GetValueOrDefault(domain.Id, 0);
+                    <div class="card mb-3 card-clickable" @onclick="() => ViewCitations(domain.Id)" @onclick:stopPropagation="false">
+                        <div class="card-body">
+                            <div class="d-flex justify-content-between align-items-start">
+                                <div class="d-flex align-items-start flex-grow-1">
+                                    <span class="domain-indicator me-3 mt-1" style="background-color: @domain.Color; width: 12px; height: 12px;"></span>
+                                    <div class="flex-grow-1">
+                                        <h5 class="card-title mb-1">
+                                            <a href="/citations?domain=@domain.Id" class="text-decoration-none text-dark stretched-link-partial">
+                                                @domain.Name
+                                            </a>
+                                        </h5>
+                                        @if (!string.IsNullOrEmpty(domain.Description))
+                                        {
+                                            <p class="card-text text-muted small mb-2">@domain.Description</p>
+                                        }
+                                        <div class="d-flex gap-3 small text-muted">
+                                            <a href="/citations?domain=@domain.Id" class="text-muted text-decoration-none">
+                                                <i class="bi bi-journal-text me-1"></i>
+                                                @count citation(s)
+                                            </a>
+                                            <span>
+                                                <i class="bi bi-calendar me-1"></i>
+                                                Created @domain.DateCreated.ToString("MMM d, yyyy")
+                                            </span>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="d-flex gap-2 position-relative" style="z-index: 2;" @onclick:stopPropagation="true">
+                                    <a href="/citations?domain=@domain.Id" class="btn btn-outline-secondary btn-sm" title="View citations">
+                                        <i class="bi bi-journal-text"></i>
+                                    </a>
+                                    <button class="btn btn-outline-primary btn-sm" @onclick="() => EditDomain(domain)" title="Edit domain">
+                                        <i class="bi bi-pencil"></i>
+                                    </button>
+                                    <button class="btn btn-outline-danger btn-sm" @onclick="() => DeleteDomain(domain)"
+                                            disabled="@(count > 0)" title="@(count > 0 ? "Cannot delete domain with citations" : "Delete domain")">
+                                        <i class="bi bi-trash"></i>
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                }
+            }
+        </div>
+
+        <div class="col-lg-4">
+            @if (_showForm)
+            {
+                <div class="card sticky-top" style="top: 1rem;">
+                    <div class="card-header">
+                        <h5 class="mb-0">@(_isEditing ? "Edit Domain" : "Create Domain")</h5>
+                    </div>
+                    <div class="card-body">
+                        <DomainForm Domain="_editingDomain" IsEdit="_isEditing" IsSubmitting="_isSubmitting"
+                                    ValidationErrors="_validationErrors" OnSubmit="HandleSubmit" OnCancel="HideForm" />
+                    </div>
+                </div>
+            }
+            else
+            {
+                <div class="card">
+                    <div class="card-header">
+                        <h5 class="mb-0">About Domains</h5>
+                    </div>
+                    <div class="card-body">
+                        <p class="small text-muted">
+                            Domains help you organize citations by research area or topic.
+                            Each citation can be assigned to one domain.
+                        </p>
+                        <p class="small text-muted mb-0">
+                            <strong>Tips:</strong>
+                        </p>
+                        <ul class="small text-muted mb-0">
+                            <li>Use colors to visually distinguish domains</li>
+                            <li>Keep domain names concise and meaningful</li>
+                            <li>You cannot delete domains that have citations</li>
+                        </ul>
+                    </div>
+                </div>
+            }
+        </div>
+    </div>
+}
+
+<ConfirmDialog @ref="_confirmDialog" />
+
+@code {
+    private List<Domain> _domains = new();
+    private Dictionary<Guid, int> _citationCounts = new();
+    private bool _isLoading = true;
+    private bool _showForm;
+    private bool _isEditing;
+    private bool _isSubmitting;
+    private Domain _editingDomain = new();
+    private List<string> _validationErrors = new();
+    private ConfirmDialog? _confirmDialog;
+
+    protected override async Task OnInitializedAsync()
+    {
+        await LoadData();
+    }
+
+    private async Task LoadData()
+    {
+        _isLoading = true;
+        try
+        {
+            _domains = await DomainService.GetAllAsync();
+            _citationCounts = await DomainService.GetCitationCountsAsync();
+        }
+        finally
+        {
+            _isLoading = false;
+        }
+    }
+
+    private void ShowCreateForm()
+    {
+        _editingDomain = new Domain { Color = DomainColors.Available[0] };
+        _isEditing = false;
+        _showForm = true;
+        _validationErrors.Clear();
+    }
+
+    private void EditDomain(Domain domain)
+    {
+        _editingDomain = new Domain
+        {
+            Id = domain.Id,
+            Name = domain.Name,
+            Description = domain.Description,
+            Color = domain.Color,
+            DateCreated = domain.DateCreated
+        };
+        _isEditing = true;
+        _showForm = true;
+        _validationErrors.Clear();
+    }
+
+    private void HideForm()
+    {
+        _showForm = false;
+        _validationErrors.Clear();
+    }
+
+    private async Task HandleSubmit(Domain domain)
+    {
+        _isSubmitting = true;
+        _validationErrors.Clear();
+
+        try
+        {
+            ServiceResult<Domain> result;
+            if (_isEditing)
+            {
+                result = await DomainService.UpdateAsync(domain);
+            }
+            else
+            {
+                result = await DomainService.CreateAsync(domain);
+            }
+
+            if (result.Success)
+            {
+                await LoadData();
+                HideForm();
+            }
+            else
+            {
+                _validationErrors = result.ValidationErrors;
+                if (!string.IsNullOrEmpty(result.ErrorMessage) && result.ValidationErrors.Count == 0)
+                {
+                    _validationErrors.Add(result.ErrorMessage);
+                }
+            }
+        }
+        finally
+        {
+            _isSubmitting = false;
+        }
+    }
+
+    private async Task DeleteDomain(Domain domain)
+    {
+        if (_confirmDialog == null) return;
+
+        var confirmed = await _confirmDialog.ShowDeleteAsync(domain.Name);
+        if (confirmed)
+        {
+            var result = await DomainService.DeleteAsync(domain.Id);
+            if (result.Success)
+            {
+                await LoadData();
+            }
+        }
+    }
+
+    private void ViewCitations(Guid domainId)
+    {
+        Navigation.NavigateTo($"/citations?domain={domainId}");
+    }
+}

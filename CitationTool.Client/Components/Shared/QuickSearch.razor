@@ -1,0 +1,202 @@
+@inject ICitationService CitationService
+@inject NavigationManager Navigation
+@implements IDisposable
+
+@if (_isVisible)
+{
+    <div class="quick-search-backdrop" @onclick="Close" @onkeydown="HandleKeyDown" tabindex="-1">
+        <div class="quick-search-modal" @onclick:stopPropagation="true" role="dialog" aria-modal="true" aria-label="Quick search">
+            <div class="border-bottom">
+                <div class="d-flex align-items-center px-3">
+                    <i class="bi bi-search text-muted"></i>
+                    <input type="text"
+                           class="form-control quick-search-input"
+                           placeholder="Search citations..."
+                           @bind="_searchTerm"
+                           @bind:event="oninput"
+                           @onkeydown="HandleInputKeyDown"
+                           @ref="_inputRef"
+                           aria-label="Search citations" />
+                    @if (!string.IsNullOrEmpty(_searchTerm))
+                    {
+                        <button class="btn btn-link text-muted p-0" @onclick="ClearSearch" aria-label="Clear search">
+                            <i class="bi bi-x-lg"></i>
+                        </button>
+                    }
+                </div>
+            </div>
+
+            <div class="quick-search-results">
+                @if (_isSearching)
+                {
+                    <div class="text-center py-4">
+                        <div class="spinner-border spinner-border-sm text-primary" role="status">
+                            <span class="visually-hidden">Searching...</span>
+                        </div>
+                    </div>
+                }
+                else if (_results.Count == 0 && !string.IsNullOrEmpty(_searchTerm))
+                {
+                    <div class="text-center py-4 text-muted">
+                        <i class="bi bi-search me-2"></i>
+                        No citations found for "@_searchTerm"
+                    </div>
+                }
+                else if (_results.Count > 0)
+                {
+                    @for (var i = 0; i < _results.Count; i++)
+                    {
+                        var index = i;
+                        var citation = _results[i];
+                        <div class="quick-search-item @(index == _selectedIndex ? "active" : "")"
+                             @onclick="() => SelectCitation(citation)"
+                             role="option"
+                             aria-selected="@(index == _selectedIndex)">
+                            <div class="fw-medium">@citation.Title</div>
+                            <div class="small text-muted">
+                                @citation.AuthorsDisplay
+                                @if (citation.Year.HasValue)
+                                {
+                                    <span class="ms-2">(@citation.Year)</span>
+                                }
+                            </div>
+                        </div>
+                    }
+                }
+                else
+                {
+                    <div class="text-center py-4 text-muted">
+                        <p class="mb-1">Start typing to search citations</p>
+                        <small>Search by title, author, DOI, or tags</small>
+                    </div>
+                }
+            </div>
+
+            <div class="border-top px-3 py-2 bg-light small text-muted d-flex justify-content-between">
+                <span>
+                    <kbd>Enter</kbd> to select
+                    <kbd class="ms-2">Esc</kbd> to close
+                </span>
+                <span>@_results.Count results</span>
+            </div>
+        </div>
+    </div>
+}
+
+@code {
+    private bool _isVisible;
+    private string _searchTerm = "";
+    private List<Citation> _results = new();
+    private int _selectedIndex;
+    private bool _isSearching;
+    private ElementReference _inputRef;
+    private System.Timers.Timer? _debounceTimer;
+
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        if (_isVisible && _inputRef.Context != null)
+        {
+            await _inputRef.FocusAsync();
+        }
+    }
+
+    public void Open()
+    {
+        _isVisible = true;
+        _searchTerm = "";
+        _results.Clear();
+        _selectedIndex = 0;
+        StateHasChanged();
+    }
+
+    public void Close()
+    {
+        _isVisible = false;
+        StateHasChanged();
+    }
+
+    private void ClearSearch()
+    {
+        _searchTerm = "";
+        _results.Clear();
+        _selectedIndex = 0;
+    }
+
+    private async Task Search()
+    {
+        if (string.IsNullOrWhiteSpace(_searchTerm))
+        {
+            _results.Clear();
+            return;
+        }
+
+        _isSearching = true;
+        StateHasChanged();
+
+        try
+        {
+            var options = new FilterOptions { SearchTerm = _searchTerm };
+            var results = await CitationService.SearchAsync(options);
+            _results = results.Take(10).ToList();
+            _selectedIndex = 0;
+        }
+        finally
+        {
+            _isSearching = false;
+            StateHasChanged();
+        }
+    }
+
+    private void HandleKeyDown(KeyboardEventArgs e)
+    {
+        if (e.Key == "Escape")
+        {
+            Close();
+        }
+    }
+
+    private async Task HandleInputKeyDown(KeyboardEventArgs e)
+    {
+        switch (e.Key)
+        {
+            case "ArrowDown":
+                _selectedIndex = Math.Min(_selectedIndex + 1, _results.Count - 1);
+                break;
+            case "ArrowUp":
+                _selectedIndex = Math.Max(_selectedIndex - 1, 0);
+                break;
+            case "Enter":
+                if (_results.Count > 0 && _selectedIndex < _results.Count)
+                {
+                    SelectCitation(_results[_selectedIndex]);
+                }
+                break;
+            case "Escape":
+                Close();
+                break;
+            default:
+                // Debounce search
+                _debounceTimer?.Stop();
+                _debounceTimer?.Dispose();
+                _debounceTimer = new System.Timers.Timer(300);
+                _debounceTimer.Elapsed += async (s, args) =>
+                {
+                    _debounceTimer?.Stop();
+                    await InvokeAsync(Search);
+                };
+                _debounceTimer.Start();
+                break;
+        }
+    }
+
+    private void SelectCitation(Citation citation)
+    {
+        Close();
+        Navigation.NavigateTo($"/citations/{citation.Id}");
+    }
+
+    public void Dispose()
+    {
+        _debounceTimer?.Dispose();
+    }
+}
