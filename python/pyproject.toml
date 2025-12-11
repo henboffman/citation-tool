@@ -1,0 +1,51 @@
+[build-system]
+requires = ["setuptools>=61.0", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "citation-tool"
+version = "1.0.0"
+description = "Python SDK for Citation Tool - manage and analyze academic citations"
+readme = "README.md"
+license = {text = "MIT"}
+requires-python = ">=3.9"
+authors = [
+    {name = "Citation Tool Team"}
+]
+keywords = ["citations", "bibliography", "research", "academic", "bibtex"]
+classifiers = [
+    "Development Status :: 4 - Beta",
+    "Intended Audience :: Science/Research",
+    "Intended Audience :: Developers",
+    "License :: OSI Approved :: MIT License",
+    "Programming Language :: Python :: 3",
+    "Programming Language :: Python :: 3.9",
+    "Programming Language :: Python :: 3.10",
+    "Programming Language :: Python :: 3.11",
+    "Programming Language :: Python :: 3.12",
+    "Topic :: Scientific/Engineering",
+    "Topic :: Text Processing :: Markup :: LaTeX",
+]
+
+[project.optional-dependencies]
+pandas = ["pandas>=1.5.0"]
+full = ["pandas>=1.5.0", "jupyter>=1.0.0"]
+dev = ["pytest>=7.0.0", "pytest-cov>=4.0.0", "black>=23.0.0", "mypy>=1.0.0"]
+
+[project.urls]
+Homepage = "https://github.com/yourusername/citation-tool"
+Documentation = "https://github.com/yourusername/citation-tool#readme"
+Repository = "https://github.com/yourusername/citation-tool"
+
+[tool.setuptools.packages.find]
+where = ["."]
+include = ["citation_tool*"]
+
+[tool.black]
+line-length = 100
+target-version = ['py39', 'py310', 'py311', 'py312']
+
+[tool.mypy]
+python_version = "3.9"
+warn_return_any = true
+warn_unused_configs = true
