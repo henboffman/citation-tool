@@ -2178,6 +2178,519 @@ public class SeedDataService
                 Tags = new List<string> { "ASP.NET Core", "configuration", "options-pattern", "secrets", "Microsoft" },
                 DomainId = webDev
             },
+
+            // ==================== SECRET MANAGEMENT & AUTH BEST PRACTICES ====================
+            new Citation
+            {
+                Title = "OWASP Secrets Management Cheat Sheet",
+                Authors = new List<string> { "OWASP" },
+                Type = CitationType.Standard,
+                Year = 2024,
+                Publisher = "OWASP Foundation",
+                Url = "https://cheatsheetseries.owasp.org/cheatsheets/Secrets_Management_Cheat_Sheet.html",
+                Abstract = "Comprehensive guide to secrets management covering secret types, lifecycle management, storage solutions, rotation strategies, and integration patterns for applications and CI/CD pipelines.",
+                Tags = new List<string> { "secrets", "OWASP", "security", "best-practices", "credentials" },
+                DomainId = security
+            },
+            new Citation
+            {
+                Title = "Azure Key Vault Documentation",
+                Authors = new List<string> { "Microsoft" },
+                Type = CitationType.Manual,
+                Year = 2024,
+                Publisher = "Microsoft",
+                Url = "https://learn.microsoft.com/en-us/azure/key-vault/",
+                Abstract = "Documentation for Azure Key Vault service for safeguarding cryptographic keys, secrets, and certificates. Covers access policies, managed identities, key rotation, and integration with Azure services.",
+                Tags = new List<string> { "Azure", "Key Vault", "secrets", "HSM", "certificates", "Microsoft" },
+                DomainId = security
+            },
+            new Citation
+            {
+                Title = "HashiCorp Vault Documentation",
+                Authors = new List<string> { "HashiCorp" },
+                Type = CitationType.Manual,
+                Year = 2024,
+                Publisher = "HashiCorp",
+                Url = "https://developer.hashicorp.com/vault/docs",
+                Abstract = "Documentation for HashiCorp Vault, a secrets management tool providing secure storage, dynamic secrets, encryption as a service, and identity-based access control across infrastructure.",
+                Tags = new List<string> { "Vault", "HashiCorp", "secrets", "encryption", "dynamic-secrets" },
+                DomainId = security
+            },
+            new Citation
+            {
+                Title = "NIST SP 800-63B: Digital Identity Guidelines - Authentication",
+                Authors = new List<string> { "Paul Grassi", "James Fenton", "Elaine Newton", "Ray Perlner", "Andrew Regenscheid", "William Burr", "Justin Richer" },
+                Type = CitationType.TechReport,
+                Year = 2020,
+                Publisher = "National Institute of Standards and Technology",
+                Doi = "10.6028/NIST.SP.800-63b",
+                Url = "https://pages.nist.gov/800-63-3/sp800-63b.html",
+                Abstract = "NIST guidelines for digital authentication covering authenticator types, assurance levels, lifecycle management, session management, and authentication protocol requirements.",
+                Tags = new List<string> { "NIST", "authentication", "MFA", "identity", "standards", "AAL" },
+                DomainId = security
+            },
+            new Citation
+            {
+                Title = "OWASP Authentication Cheat Sheet",
+                Authors = new List<string> { "OWASP" },
+                Type = CitationType.Standard,
+                Year = 2024,
+                Publisher = "OWASP Foundation",
+                Url = "https://cheatsheetseries.owasp.org/cheatsheets/Authentication_Cheat_Sheet.html",
+                Abstract = "Best practices for implementing authentication including password policies, multi-factor authentication, session management, account lockout, and secure credential storage.",
+                Tags = new List<string> { "OWASP", "authentication", "passwords", "MFA", "security" },
+                DomainId = security
+            },
+            new Citation
+            {
+                Title = "OWASP Key Management Cheat Sheet",
+                Authors = new List<string> { "OWASP" },
+                Type = CitationType.Standard,
+                Year = 2024,
+                Publisher = "OWASP Foundation",
+                Url = "https://cheatsheetseries.owasp.org/cheatsheets/Key_Management_Cheat_Sheet.html",
+                Abstract = "Guidelines for cryptographic key management including key generation, storage, distribution, rotation, and destruction. Covers HSMs, key hierarchies, and compliance requirements.",
+                Tags = new List<string> { "OWASP", "cryptography", "key-management", "HSM", "security" },
+                DomainId = security
+            },
+            new Citation
+            {
+                Title = "AWS Secrets Manager Best Practices",
+                Authors = new List<string> { "Amazon Web Services" },
+                Type = CitationType.Manual,
+                Year = 2024,
+                Publisher = "Amazon Web Services",
+                Url = "https://docs.aws.amazon.com/secretsmanager/latest/userguide/best-practices.html",
+                Abstract = "Best practices for using AWS Secrets Manager including secret rotation, access control with IAM, cross-account access, monitoring with CloudTrail, and integration patterns.",
+                Tags = new List<string> { "AWS", "secrets", "rotation", "IAM", "cloud" },
+                DomainId = security
+            },
+
+            // ==================== SOFTWARE BILL OF MATERIALS (SBOM) ====================
+            new Citation
+            {
+                Title = "NTIA Minimum Elements for SBOM",
+                Authors = new List<string> { "National Telecommunications and Information Administration" },
+                Type = CitationType.TechReport,
+                Year = 2021,
+                Publisher = "U.S. Department of Commerce",
+                Url = "https://www.ntia.gov/sites/default/files/publications/sbom_minimum_elements_report_0.pdf",
+                Abstract = "Defines the minimum elements for a Software Bill of Materials including data fields, automation support, and practices/processes. Foundation document for SBOM standardization efforts.",
+                Tags = new List<string> { "SBOM", "NTIA", "supply-chain", "standards", "transparency" },
+                DomainId = security
+            },
+            new Citation
+            {
+                Title = "CISA SBOM Resources",
+                Authors = new List<string> { "Cybersecurity and Infrastructure Security Agency" },
+                Type = CitationType.Website,
+                Year = 2024,
+                Publisher = "CISA",
+                Url = "https://www.cisa.gov/sbom",
+                Abstract = "CISA's comprehensive SBOM resource hub covering SBOM types, formats (SPDX, CycloneDX), tooling, and guidance for SBOM generation, consumption, and analysis in software supply chain security.",
+                Tags = new List<string> { "SBOM", "CISA", "supply-chain", "SPDX", "CycloneDX" },
+                DomainId = security
+            },
+            new Citation
+            {
+                Title = "SPDX Specification",
+                Authors = new List<string> { "Linux Foundation" },
+                Type = CitationType.Standard,
+                Year = 2024,
+                Publisher = "Linux Foundation",
+                Url = "https://spdx.github.io/spdx-spec/v2.3/",
+                Abstract = "Software Package Data Exchange (SPDX) specification for communicating software bill of materials including component identification, licensing, security references, and relationships.",
+                Tags = new List<string> { "SPDX", "SBOM", "licensing", "ISO-5962", "standards" },
+                DomainId = security
+            },
+            new Citation
+            {
+                Title = "CycloneDX Specification",
+                Authors = new List<string> { "OWASP" },
+                Type = CitationType.Standard,
+                Year = 2024,
+                Publisher = "OWASP Foundation",
+                Url = "https://cyclonedx.org/specification/overview/",
+                Abstract = "CycloneDX is a lightweight SBOM standard designed for security contexts. Supports software, hardware, services, and cryptographic assets with vulnerability tracking and attestation.",
+                Tags = new List<string> { "CycloneDX", "SBOM", "OWASP", "VEX", "security" },
+                DomainId = security
+            },
+            new Citation
+            {
+                Title = "Executive Order 14028: Improving the Nation's Cybersecurity",
+                Authors = new List<string> { "Executive Office of the President" },
+                Type = CitationType.Standard,
+                Year = 2021,
+                Publisher = "The White House",
+                Url = "https://www.whitehouse.gov/briefing-room/presidential-actions/2021/05/12/executive-order-on-improving-the-nations-cybersecurity/",
+                Abstract = "Executive order mandating SBOM requirements for federal software procurement, establishing software supply chain security requirements, and directing NIST to publish security guidelines.",
+                Tags = new List<string> { "SBOM", "executive-order", "federal", "supply-chain", "policy" },
+                DomainId = security
+            },
+            new Citation
+            {
+                Title = "Framing Software Component Transparency: Establishing a Common SBOM",
+                Authors = new List<string> { "NTIA Multistakeholder Process" },
+                Type = CitationType.TechReport,
+                Year = 2021,
+                Publisher = "NTIA",
+                Url = "https://www.ntia.gov/files/ntia/publications/framingsbom_20191112.pdf",
+                Abstract = "Foundational document establishing the case for SBOMs, defining terminology, use cases, and the path toward widespread SBOM adoption across the software industry.",
+                Tags = new List<string> { "SBOM", "NTIA", "transparency", "framework", "supply-chain" },
+                DomainId = security
+            },
+
+            // ==================== SAST & SECURITY TESTING (NIST & INDUSTRY) ====================
+            new Citation
+            {
+                Title = "NIST SP 800-218: Secure Software Development Framework (SSDF)",
+                Authors = new List<string> { "Murugiah Souppaya", "Karen Scarfone", "Donna Dodson" },
+                Type = CitationType.TechReport,
+                Year = 2022,
+                Publisher = "National Institute of Standards and Technology",
+                Doi = "10.6028/NIST.SP.800-218",
+                Url = "https://csrc.nist.gov/publications/detail/sp/800-218/final",
+                Abstract = "NIST framework for secure software development practices including SAST integration, code review requirements, vulnerability management, and security testing throughout the SDLC.",
+                Tags = new List<string> { "NIST", "SSDF", "SAST", "secure-development", "SDLC" },
+                DomainId = security
+            },
+            new Citation
+            {
+                Title = "NIST SP 500-268: Source Code Security Analysis Tool Functional Specification",
+                Authors = new List<string> { "Paul Black", "Michael Kass", "Michael Koo", "Elizabeth Fong" },
+                Type = CitationType.TechReport,
+                Year = 2011,
+                Publisher = "National Institute of Standards and Technology",
+                Url = "https://csrc.nist.gov/publications/detail/sp/500-268/final",
+                Abstract = "Specification for static analysis security testing (SAST) tools defining weakness coverage, reporting requirements, and evaluation criteria for source code analyzers.",
+                Tags = new List<string> { "NIST", "SAST", "static-analysis", "security-tools", "specification" },
+                DomainId = security
+            },
+            new Citation
+            {
+                Title = "OWASP Source Code Analysis Tools",
+                Authors = new List<string> { "OWASP" },
+                Type = CitationType.Website,
+                Year = 2024,
+                Publisher = "OWASP Foundation",
+                Url = "https://owasp.org/www-community/Source_Code_Analysis_Tools",
+                Abstract = "Comprehensive list and comparison of static application security testing (SAST) tools covering commercial and open-source options, language support, and integration capabilities.",
+                Tags = new List<string> { "OWASP", "SAST", "tools", "static-analysis", "comparison" },
+                DomainId = security
+            },
+            new Citation
+            {
+                Title = "OWASP Application Security Verification Standard (ASVS)",
+                Authors = new List<string> { "OWASP" },
+                Type = CitationType.Standard,
+                Year = 2024,
+                Publisher = "OWASP Foundation",
+                Url = "https://owasp.org/www-project-application-security-verification-standard/",
+                Abstract = "Framework for testing web application security controls providing three verification levels. Covers authentication, session management, access control, validation, cryptography, and more.",
+                Tags = new List<string> { "OWASP", "ASVS", "security-testing", "verification", "standards" },
+                DomainId = security
+            },
+            new Citation
+            {
+                Title = "BSIMM: Building Security In Maturity Model",
+                Authors = new List<string> { "Synopsys" },
+                Type = CitationType.TechReport,
+                Year = 2023,
+                Publisher = "Synopsys",
+                Url = "https://www.bsimm.com/",
+                Abstract = "Data-driven model for software security initiatives based on observations from hundreds of organizations. Measures security activities across governance, intelligence, SSDL touchpoints, and deployment.",
+                Tags = new List<string> { "BSIMM", "maturity-model", "security", "metrics", "industry" },
+                DomainId = security
+            },
+            new Citation
+            {
+                Title = "OWASP SAMM: Software Assurance Maturity Model",
+                Authors = new List<string> { "OWASP" },
+                Type = CitationType.Standard,
+                Year = 2024,
+                Publisher = "OWASP Foundation",
+                Url = "https://owaspsamm.org/",
+                Abstract = "Prescriptive maturity model for software security covering governance, design, implementation, verification, and operations. Provides roadmap for improving security practices.",
+                Tags = new List<string> { "OWASP", "SAMM", "maturity-model", "governance", "security" },
+                DomainId = security
+            },
+            new Citation
+            {
+                Title = "Gartner Magic Quadrant for Application Security Testing",
+                Authors = new List<string> { "Gartner" },
+                Type = CitationType.TechReport,
+                Year = 2024,
+                Publisher = "Gartner",
+                Url = "https://www.gartner.com/en/documents/4022179",
+                Abstract = "Industry analysis of application security testing market including SAST, DAST, IAST, and SCA vendors. Evaluates completeness of vision and ability to execute for leading providers.",
+                Tags = new List<string> { "Gartner", "SAST", "DAST", "AST", "market-analysis" },
+                DomainId = security
+            },
+
+            // ==================== SECURE CODING PRACTICES & STANDARDS ====================
+            new Citation
+            {
+                Title = "OWASP Secure Coding Practices Quick Reference",
+                Authors = new List<string> { "OWASP" },
+                Type = CitationType.Standard,
+                Year = 2024,
+                Publisher = "OWASP Foundation",
+                Url = "https://owasp.org/www-project-secure-coding-practices-quick-reference-guide/",
+                Abstract = "Technology-agnostic set of secure coding practices covering input validation, output encoding, authentication, session management, access control, cryptography, error handling, and more.",
+                Tags = new List<string> { "OWASP", "secure-coding", "best-practices", "checklist", "standards" },
+                DomainId = security
+            },
+            new Citation
+            {
+                Title = "SEI CERT Coding Standards",
+                Authors = new List<string> { "Software Engineering Institute" },
+                Type = CitationType.Standard,
+                Year = 2024,
+                Publisher = "Carnegie Mellon University",
+                Url = "https://wiki.sei.cmu.edu/confluence/display/seccode",
+                Abstract = "Secure coding standards for C, C++, Java, Perl, and Android. Each rule includes risk assessment, code examples, and remediation guidance for preventing security vulnerabilities.",
+                Tags = new List<string> { "CERT", "SEI", "secure-coding", "C", "C++", "Java" },
+                DomainId = security
+            },
+            new Citation
+            {
+                Title = "CWE/SANS Top 25 Most Dangerous Software Weaknesses",
+                Authors = new List<string> { "MITRE", "SANS" },
+                Type = CitationType.Standard,
+                Year = 2023,
+                Publisher = "MITRE Corporation",
+                Url = "https://cwe.mitre.org/top25/",
+                Abstract = "Annual list of the most dangerous software weaknesses based on prevalence and severity. Includes CWE identifiers, descriptions, and remediation guidance for each weakness.",
+                Tags = new List<string> { "CWE", "SANS", "vulnerabilities", "top-25", "weaknesses" },
+                DomainId = security
+            },
+            new Citation
+            {
+                Title = "OWASP Top 10",
+                Authors = new List<string> { "OWASP" },
+                Type = CitationType.Standard,
+                Year = 2021,
+                Publisher = "OWASP Foundation",
+                Url = "https://owasp.org/www-project-top-ten/",
+                Abstract = "Standard awareness document for web application security representing broad consensus on critical security risks. Covers injection, broken authentication, XSS, insecure design, and more.",
+                Tags = new List<string> { "OWASP", "top-10", "web-security", "vulnerabilities", "standards" },
+                DomainId = security
+            },
+            new Citation
+            {
+                Title = "Microsoft Security Development Lifecycle (SDL)",
+                Authors = new List<string> { "Microsoft" },
+                Type = CitationType.Manual,
+                Year = 2024,
+                Publisher = "Microsoft",
+                Url = "https://www.microsoft.com/en-us/securityengineering/sdl",
+                Abstract = "Microsoft's security development practices including threat modeling, secure coding requirements, security testing, and incident response. Industry-leading SDL methodology.",
+                Tags = new List<string> { "SDL", "Microsoft", "secure-development", "threat-modeling", "SDLC" },
+                DomainId = security
+            },
+            new Citation
+            {
+                Title = "OWASP Proactive Controls",
+                Authors = new List<string> { "OWASP" },
+                Type = CitationType.Standard,
+                Year = 2024,
+                Publisher = "OWASP Foundation",
+                Url = "https://owasp.org/www-project-proactive-controls/",
+                Abstract = "Top 10 security techniques that should be included in every software development project. Focuses on defensive techniques rather than vulnerabilities.",
+                Tags = new List<string> { "OWASP", "proactive", "secure-coding", "defense", "best-practices" },
+                DomainId = security
+            },
+            new Citation
+            {
+                Title = "ISO/IEC 27034: Application Security",
+                Authors = new List<string> { "ISO/IEC" },
+                Type = CitationType.Standard,
+                Year = 2018,
+                Publisher = "International Organization for Standardization",
+                Url = "https://www.iso.org/standard/44378.html",
+                Abstract = "International standard providing guidance on application security throughout the application lifecycle. Defines organizational normative framework and application security management process.",
+                Tags = new List<string> { "ISO", "27034", "application-security", "standards", "framework" },
+                DomainId = security
+            },
+
+            // ==================== LEGACY MODERNIZATION STRATEGIES ====================
+            new Citation
+            {
+                Title = "Modernizing Legacy Applications in the Public Sector",
+                Authors = new List<string> { "Gartner" },
+                Type = CitationType.TechReport,
+                Year = 2023,
+                Publisher = "Gartner",
+                Url = "https://www.gartner.com/en/information-technology/insights/modernization",
+                Abstract = "Strategies for legacy application modernization including the 7 Rs (Rehost, Refactor, Rearchitect, Rebuild, Replace, Retire, Retain) and assessment frameworks for modernization decisions.",
+                Tags = new List<string> { "modernization", "legacy", "7Rs", "strategy", "Gartner" },
+                DomainId = softwareEng
+            },
+            new Citation
+            {
+                Title = "AWS Prescriptive Guidance: Application Modernization",
+                Authors = new List<string> { "Amazon Web Services" },
+                Type = CitationType.Manual,
+                Year = 2024,
+                Publisher = "Amazon Web Services",
+                Url = "https://docs.aws.amazon.com/prescriptive-guidance/latest/strategy-modernizing-applications/",
+                Abstract = "AWS guidance on legacy modernization covering assessment methodologies, migration patterns, microservices decomposition, and cloud-native transformation strategies.",
+                Tags = new List<string> { "AWS", "modernization", "cloud", "migration", "microservices" },
+                DomainId = softwareEng
+            },
+            new Citation
+            {
+                Title = "Strangler Fig Pattern",
+                Authors = new List<string> { "Martin Fowler" },
+                Type = CitationType.Website,
+                Year = 2004,
+                Publisher = "Martin Fowler",
+                Url = "https://martinfowler.com/bliki/StranglerFigApplication.html",
+                Abstract = "Pattern for incrementally replacing legacy systems by gradually routing functionality to new implementations while keeping the old system running until fully replaced.",
+                Tags = new List<string> { "strangler-fig", "modernization", "pattern", "migration", "incremental" },
+                DomainId = softwareEng
+            },
+            new Citation
+            {
+                Title = "Refactoring: Improving the Design of Existing Code",
+                Authors = new List<string> { "Martin Fowler" },
+                Type = CitationType.Book,
+                Year = 2018,
+                Publisher = "Addison-Wesley",
+                Isbn = "978-0134757599",
+                Url = "https://martinfowler.com/books/refactoring.html",
+                Abstract = "Definitive guide to refactoring covering code smells, refactoring catalog, and techniques for safely improving code structure. Essential reading for legacy modernization.",
+                Tags = new List<string> { "refactoring", "code-quality", "legacy", "patterns", "classic" },
+                DomainId = softwareEng
+            },
+            new Citation
+            {
+                Title = "Working Effectively with Legacy Code",
+                Authors = new List<string> { "Michael Feathers" },
+                Type = CitationType.Book,
+                Year = 2004,
+                Publisher = "Prentice Hall",
+                Isbn = "978-0131177055",
+                Url = "https://www.informit.com/store/working-effectively-with-legacy-code-9780131177055",
+                Abstract = "Strategies for working with large, untested legacy codebases. Covers dependency breaking techniques, characterization tests, and safe refactoring approaches.",
+                Tags = new List<string> { "legacy", "testing", "refactoring", "dependency", "classic" },
+                DomainId = softwareEng
+            },
+            new Citation
+            {
+                Title = "Monolith to Microservices",
+                Authors = new List<string> { "Sam Newman" },
+                Type = CitationType.Book,
+                Year = 2019,
+                Publisher = "O'Reilly Media",
+                Isbn = "978-1492047841",
+                Url = "https://www.oreilly.com/library/view/monolith-to-microservices/9781492047834/",
+                Abstract = "Evolutionary approach to decomposing monolithic systems into microservices. Covers patterns like Strangler Fig, Branch by Abstraction, and database decomposition strategies.",
+                Tags = new List<string> { "microservices", "monolith", "decomposition", "modernization", "patterns" },
+                DomainId = softwareEng
+            },
+            new Citation
+            {
+                Title = "Azure Cloud Adoption Framework: Migration",
+                Authors = new List<string> { "Microsoft" },
+                Type = CitationType.Manual,
+                Year = 2024,
+                Publisher = "Microsoft",
+                Url = "https://learn.microsoft.com/en-us/azure/cloud-adoption-framework/migrate/",
+                Abstract = "Microsoft's framework for cloud migration covering assessment, planning, migration execution, and optimization. Includes patterns for modernizing legacy applications on Azure.",
+                Tags = new List<string> { "Azure", "migration", "modernization", "cloud", "CAF", "Microsoft" },
+                DomainId = softwareEng
+            },
+            new Citation
+            {
+                Title = "Technical Debt: From Metaphor to Theory and Practice",
+                Authors = new List<string> { "Philippe Kruchten", "Robert Nord", "Ipek Ozkaya" },
+                Type = CitationType.Article,
+                Year = 2012,
+                JournalOrConference = "IEEE Software",
+                Volume = "29",
+                Issue = "6",
+                Pages = "18-21",
+                Doi = "10.1109/MS.2012.167",
+                Url = "https://ieeexplore.ieee.org/document/6336722",
+                Abstract = "Comprehensive analysis of technical debt concept, taxonomy, measurement approaches, and management strategies. Foundational paper for understanding legacy system challenges.",
+                Tags = new List<string> { "technical-debt", "legacy", "metrics", "management", "IEEE" },
+                DomainId = softwareEng
+            },
+            new Citation
+            {
+                Title = "CAST Highlight: Application Intelligence",
+                Authors = new List<string> { "CAST" },
+                Type = CitationType.Website,
+                Year = 2024,
+                Publisher = "CAST Software",
+                Url = "https://www.castsoftware.com/highlight",
+                Abstract = "SaaS platform for rapid application portfolio analysis providing insights into cloud readiness, technical debt, open source risk, and modernization recommendations.",
+                Tags = new List<string> { "CAST", "portfolio-analysis", "modernization", "technical-debt", "cloud-readiness" },
+                DomainId = softwareEng
+            },
+
+            // ==================== ADDITIONAL SECURITY GUIDANCE ====================
+            new Citation
+            {
+                Title = "NIST Cybersecurity Framework",
+                Authors = new List<string> { "National Institute of Standards and Technology" },
+                Type = CitationType.Standard,
+                Year = 2024,
+                Publisher = "NIST",
+                Url = "https://www.nist.gov/cyberframework",
+                Abstract = "Framework for improving critical infrastructure cybersecurity. Provides taxonomy of cybersecurity outcomes organized into Identify, Protect, Detect, Respond, and Recover functions.",
+                Tags = new List<string> { "NIST", "CSF", "cybersecurity", "framework", "risk-management" },
+                DomainId = security
+            },
+            new Citation
+            {
+                Title = "CIS Critical Security Controls",
+                Authors = new List<string> { "Center for Internet Security" },
+                Type = CitationType.Standard,
+                Year = 2024,
+                Publisher = "Center for Internet Security",
+                Url = "https://www.cisecurity.org/controls",
+                Abstract = "Prioritized set of actions to protect organizations from known cyber attack vectors. Provides implementation guidance, metrics, and mapping to other frameworks.",
+                Tags = new List<string> { "CIS", "controls", "hardening", "security", "best-practices" },
+                DomainId = security
+            },
+            new Citation
+            {
+                Title = "OWASP Dependency-Check",
+                Authors = new List<string> { "OWASP" },
+                Type = CitationType.Website,
+                Year = 2024,
+                Publisher = "OWASP Foundation",
+                Url = "https://owasp.org/www-project-dependency-check/",
+                Abstract = "Software Composition Analysis (SCA) tool that identifies project dependencies and checks for known vulnerabilities (CVEs). Integrates with build tools and CI/CD pipelines.",
+                Tags = new List<string> { "OWASP", "SCA", "dependencies", "CVE", "supply-chain" },
+                DomainId = security
+            },
+            new Citation
+            {
+                Title = "Supply Chain Levels for Software Artifacts (SLSA)",
+                Authors = new List<string> { "Google", "OpenSSF" },
+                Type = CitationType.Standard,
+                Year = 2024,
+                Publisher = "OpenSSF",
+                Url = "https://slsa.dev/",
+                Abstract = "Security framework for ensuring the integrity of software artifacts throughout the supply chain. Defines levels of assurance from basic to comprehensive supply chain security.",
+                Tags = new List<string> { "SLSA", "supply-chain", "integrity", "provenance", "OpenSSF" },
+                DomainId = security
+            },
+            new Citation
+            {
+                Title = "Sigstore: Software Signing for Everyone",
+                Authors = new List<string> { "OpenSSF" },
+                Type = CitationType.Website,
+                Year = 2024,
+                Publisher = "OpenSSF",
+                Url = "https://www.sigstore.dev/",
+                Abstract = "Free software signing service providing keyless signing, transparency logs, and verification tools. Enables secure software supply chains without managing cryptographic keys.",
+                Tags = new List<string> { "Sigstore", "signing", "supply-chain", "transparency", "OpenSSF" },
+                DomainId = security
+            },
         });
 
         // Set DateAdded for all citations
