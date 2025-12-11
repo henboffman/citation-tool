@@ -7,11 +7,13 @@ public class CitationService : ICitationService
 {
     private readonly IStorageService _storage;
     private readonly IValidator<Citation> _validator;
+    private readonly IAppStateService _appState;
 
-    public CitationService(IStorageService storage, IValidator<Citation> validator)
+    public CitationService(IStorageService storage, IValidator<Citation> validator, IAppStateService appState)
     {
         _storage = storage;
         _validator = validator;
+        _appState = appState;
     }
 
     public async Task<List<Citation>> GetAllAsync()
@@ -44,6 +46,7 @@ public class CitationService : ICitationService
                 "Unable to save citation. Please try again. If the problem persists, try refreshing the page.");
         }
 
+        _appState.NotifyCitationsChanged();
         return ServiceResult<Citation>.Ok(citation);
     }
 
@@ -90,6 +93,7 @@ public class CitationService : ICitationService
                 "Unable to delete citation. Please try again. If the problem persists, try refreshing the page.");
         }
 
+        _appState.NotifyCitationsChanged();
         return ServiceResult.Ok();
     }
 
@@ -185,7 +189,12 @@ public class CitationService : ICitationService
             citation.DateModified = DateTime.UtcNow;
         }
 
-        return await _storage.BulkAddCitationsAsync(citationList);
+        var count = await _storage.BulkAddCitationsAsync(citationList);
+        if (count > 0)
+        {
+            _appState.NotifyCitationsChanged();
+        }
+        return count;
     }
 
     public async Task<List<string>> GetAllTagsAsync()

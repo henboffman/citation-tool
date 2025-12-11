@@ -1912,6 +1912,272 @@ public class SeedDataService
                 Tags = new List<string> { "PWA", "offline", "service-workers", "mobile" },
                 DomainId = webDev
             },
+
+            // ==================== MICROSOFT .NET ECOSYSTEM ====================
+            new Citation
+            {
+                Title = "ASP.NET Core Security and Identity",
+                Authors = new List<string> { "Microsoft" },
+                Type = CitationType.Manual,
+                Year = 2024,
+                Publisher = "Microsoft",
+                Url = "https://learn.microsoft.com/en-us/aspnet/core/security/",
+                Abstract = "Comprehensive guide to authentication, authorization, data protection, and security best practices in ASP.NET Core applications including Identity, OAuth, OpenID Connect, and policy-based authorization.",
+                Tags = new List<string> { "ASP.NET Core", "security", "authentication", "authorization", "Identity", "Microsoft" },
+                DomainId = webDev
+            },
+            new Citation
+            {
+                Title = "ASP.NET Core Authentication with External Providers",
+                Authors = new List<string> { "Microsoft" },
+                Type = CitationType.Manual,
+                Year = 2024,
+                Publisher = "Microsoft",
+                Url = "https://learn.microsoft.com/en-us/aspnet/core/security/authentication/social/",
+                Abstract = "Documentation for integrating external authentication providers (Google, Facebook, Microsoft, Twitter) with ASP.NET Core Identity, including OAuth 2.0 and OpenID Connect configuration.",
+                Tags = new List<string> { "ASP.NET Core", "OAuth", "OpenID Connect", "social-login", "Microsoft" },
+                DomainId = webDev
+            },
+            new Citation
+            {
+                Title = "Blazor Documentation",
+                Authors = new List<string> { "Microsoft" },
+                Type = CitationType.Manual,
+                Year = 2024,
+                Publisher = "Microsoft",
+                Url = "https://learn.microsoft.com/en-us/aspnet/core/blazor/",
+                Abstract = "Official documentation for Blazor, Microsoft's framework for building interactive web UIs using C# instead of JavaScript. Covers Blazor Server, Blazor WebAssembly, components, data binding, and JavaScript interop.",
+                Tags = new List<string> { "Blazor", "WebAssembly", "C#", ".NET", "SPA", "Microsoft" },
+                DomainId = webDev
+            },
+            new Citation
+            {
+                Title = "Blazor State Management",
+                Authors = new List<string> { "Microsoft" },
+                Type = CitationType.Manual,
+                Year = 2024,
+                Publisher = "Microsoft",
+                Url = "https://learn.microsoft.com/en-us/aspnet/core/blazor/state-management",
+                Abstract = "Guide to managing state in Blazor applications including browser storage, in-memory state containers, and state persistence across circuits and prerendering scenarios.",
+                Tags = new List<string> { "Blazor", "state-management", "cascading-parameters", "Microsoft" },
+                DomainId = webDev
+            },
+            new Citation
+            {
+                Title = ".NET Documentation",
+                Authors = new List<string> { "Microsoft" },
+                Type = CitationType.Manual,
+                Year = 2024,
+                Publisher = "Microsoft",
+                Url = "https://learn.microsoft.com/en-us/dotnet/",
+                Abstract = "Official documentation for .NET platform covering .NET Core, .NET 8/9, C#, F#, ASP.NET Core, and cross-platform development. Includes tutorials, API reference, and architectural guidance.",
+                Tags = new List<string> { ".NET", "C#", "cross-platform", "Microsoft", "documentation" },
+                DomainId = progLang
+            },
+            new Citation
+            {
+                Title = ".NET Fundamentals",
+                Authors = new List<string> { "Microsoft" },
+                Type = CitationType.Manual,
+                Year = 2024,
+                Publisher = "Microsoft",
+                Url = "https://learn.microsoft.com/en-us/dotnet/fundamentals/",
+                Abstract = "Core concepts of .NET including the runtime, libraries, SDK, deployment models, and architectural decisions. Essential reading for understanding the .NET ecosystem.",
+                Tags = new List<string> { ".NET", "runtime", "SDK", "fundamentals", "Microsoft" },
+                DomainId = progLang
+            },
+            new Citation
+            {
+                Title = "Entity Framework Core Documentation",
+                Authors = new List<string> { "Microsoft" },
+                Type = CitationType.Manual,
+                Year = 2024,
+                Publisher = "Microsoft",
+                Url = "https://learn.microsoft.com/en-us/ef/core/",
+                Abstract = "Official documentation for Entity Framework Core, the modern object-database mapper for .NET. Covers DbContext, migrations, querying, change tracking, relationships, and performance optimization.",
+                Tags = new List<string> { "Entity Framework", "EF Core", "ORM", "database", ".NET", "Microsoft" },
+                DomainId = databases
+            },
+            new Citation
+            {
+                Title = "EF Core Performance Best Practices",
+                Authors = new List<string> { "Microsoft" },
+                Type = CitationType.Manual,
+                Year = 2024,
+                Publisher = "Microsoft",
+                Url = "https://learn.microsoft.com/en-us/ef/core/performance/",
+                Abstract = "Performance optimization guide for Entity Framework Core including efficient querying, tracking vs no-tracking, compiled queries, bulk operations, and database indexing strategies.",
+                Tags = new List<string> { "EF Core", "performance", "optimization", "querying", "Microsoft" },
+                DomainId = databases
+            },
+            new Citation
+            {
+                Title = "Microsoft Entra ID Documentation",
+                Authors = new List<string> { "Microsoft" },
+                Type = CitationType.Manual,
+                Year = 2024,
+                Publisher = "Microsoft",
+                Url = "https://learn.microsoft.com/en-us/entra/identity/",
+                Abstract = "Documentation for Microsoft Entra ID (formerly Azure Active Directory) covering identity management, single sign-on, multi-factor authentication, conditional access, and enterprise application integration.",
+                Tags = new List<string> { "Entra", "Azure AD", "identity", "SSO", "MFA", "Microsoft" },
+                DomainId = security
+            },
+            new Citation
+            {
+                Title = "Microsoft Identity Platform Documentation",
+                Authors = new List<string> { "Microsoft" },
+                Type = CitationType.Manual,
+                Year = 2024,
+                Publisher = "Microsoft",
+                Url = "https://learn.microsoft.com/en-us/entra/identity-platform/",
+                Abstract = "Developer documentation for the Microsoft identity platform including OAuth 2.0, OpenID Connect, MSAL libraries, token handling, and integrating authentication into web, mobile, and desktop applications.",
+                Tags = new List<string> { "MSAL", "OAuth", "OpenID Connect", "tokens", "identity", "Microsoft" },
+                DomainId = security
+            },
+            new Citation
+            {
+                Title = "Microsoft REST API Guidelines",
+                Authors = new List<string> { "Microsoft" },
+                Type = CitationType.Standard,
+                Year = 2024,
+                Publisher = "Microsoft",
+                Url = "https://github.com/microsoft/api-guidelines",
+                Abstract = "Microsoft's REST API design guidelines covering URL structure, versioning, error handling, pagination, filtering, and consistency patterns. Widely adopted industry standard for API design.",
+                Tags = new List<string> { "REST", "API", "design-guidelines", "standards", "Microsoft" },
+                DomainId = softwareEng
+            },
+            new Citation
+            {
+                Title = "Azure REST API Design Guidelines",
+                Authors = new List<string> { "Microsoft" },
+                Type = CitationType.Standard,
+                Year = 2024,
+                Publisher = "Microsoft",
+                Url = "https://learn.microsoft.com/en-us/azure/architecture/best-practices/api-design",
+                Abstract = "Best practices for designing RESTful web APIs on Azure including resource naming, HTTP methods, status codes, HATEOAS, versioning strategies, and async operations.",
+                Tags = new List<string> { "Azure", "REST", "API", "architecture", "best-practices", "Microsoft" },
+                DomainId = softwareEng
+            },
+            new Citation
+            {
+                Title = "Azure Architecture Center",
+                Authors = new List<string> { "Microsoft" },
+                Type = CitationType.Manual,
+                Year = 2024,
+                Publisher = "Microsoft",
+                Url = "https://learn.microsoft.com/en-us/azure/architecture/",
+                Abstract = "Comprehensive resource for cloud and software architecture including reference architectures, design patterns, best practices, and architecture decision records for building reliable, scalable systems.",
+                Tags = new List<string> { "Azure", "architecture", "patterns", "cloud", "reference", "Microsoft" },
+                DomainId = softwareEng
+            },
+            new Citation
+            {
+                Title = ".NET Application Architecture Guidance",
+                Authors = new List<string> { "Microsoft" },
+                Type = CitationType.Manual,
+                Year = 2024,
+                Publisher = "Microsoft",
+                Url = "https://learn.microsoft.com/en-us/dotnet/architecture/",
+                Abstract = "Architecture guidance for .NET applications including microservices, containerization, Domain-Driven Design, CQRS, event sourcing, and cloud-native application patterns.",
+                Tags = new List<string> { ".NET", "architecture", "microservices", "DDD", "cloud-native", "Microsoft" },
+                DomainId = softwareEng
+            },
+            new Citation
+            {
+                Title = "Unit Testing Best Practices in .NET",
+                Authors = new List<string> { "Microsoft" },
+                Type = CitationType.Manual,
+                Year = 2024,
+                Publisher = "Microsoft",
+                Url = "https://learn.microsoft.com/en-us/dotnet/core/testing/unit-testing-best-practices",
+                Abstract = "Best practices for unit testing .NET applications including naming conventions, test organization, avoiding logic in tests, and guidelines for writing maintainable test suites.",
+                Tags = new List<string> { "testing", "unit-tests", "best-practices", ".NET", "Microsoft" },
+                DomainId = testing
+            },
+            new Citation
+            {
+                Title = ".NET Testing with xUnit",
+                Authors = new List<string> { "Microsoft" },
+                Type = CitationType.Manual,
+                Year = 2024,
+                Publisher = "Microsoft",
+                Url = "https://learn.microsoft.com/en-us/dotnet/core/testing/unit-testing-with-dotnet-test",
+                Abstract = "Guide to unit testing .NET projects using xUnit test framework including test project setup, assertions, test fixtures, parameterized tests, and integration with dotnet test CLI.",
+                Tags = new List<string> { "xUnit", "testing", ".NET", "TDD", "Microsoft" },
+                DomainId = testing
+            },
+            new Citation
+            {
+                Title = "Integration Testing in ASP.NET Core",
+                Authors = new List<string> { "Microsoft" },
+                Type = CitationType.Manual,
+                Year = 2024,
+                Publisher = "Microsoft",
+                Url = "https://learn.microsoft.com/en-us/aspnet/core/test/integration-tests",
+                Abstract = "Documentation for integration testing ASP.NET Core applications using WebApplicationFactory, TestServer, and strategies for testing middleware, filters, and the full request pipeline.",
+                Tags = new List<string> { "integration-testing", "ASP.NET Core", "WebApplicationFactory", "Microsoft" },
+                DomainId = testing
+            },
+            new Citation
+            {
+                Title = "Blazor Component Testing with bUnit",
+                Authors = new List<string> { "Egil Hansen" },
+                Type = CitationType.Manual,
+                Year = 2024,
+                Publisher = "bUnit",
+                Url = "https://bunit.dev/",
+                Abstract = "Testing library for Blazor components that enables writing comprehensive tests. Supports testing component rendering, events, two-way binding, dependency injection, and JavaScript interop.",
+                Tags = new List<string> { "bUnit", "Blazor", "testing", "components", ".NET" },
+                DomainId = testing
+            },
+            new Citation
+            {
+                Title = "C# Coding Conventions",
+                Authors = new List<string> { "Microsoft" },
+                Type = CitationType.Manual,
+                Year = 2024,
+                Publisher = "Microsoft",
+                Url = "https://learn.microsoft.com/en-us/dotnet/csharp/fundamentals/coding-style/coding-conventions",
+                Abstract = "Official C# coding conventions covering naming, layout, commenting, and language usage guidelines. Essential for maintaining consistent, readable C# codebases.",
+                Tags = new List<string> { "C#", "coding-style", "conventions", "best-practices", "Microsoft" },
+                DomainId = progLang
+            },
+            new Citation
+            {
+                Title = "ASP.NET Core Middleware",
+                Authors = new List<string> { "Microsoft" },
+                Type = CitationType.Manual,
+                Year = 2024,
+                Publisher = "Microsoft",
+                Url = "https://learn.microsoft.com/en-us/aspnet/core/fundamentals/middleware/",
+                Abstract = "Documentation for ASP.NET Core middleware pipeline including built-in middleware, custom middleware development, ordering, branching, and request/response modification patterns.",
+                Tags = new List<string> { "ASP.NET Core", "middleware", "pipeline", "HTTP", "Microsoft" },
+                DomainId = webDev
+            },
+            new Citation
+            {
+                Title = "Dependency Injection in .NET",
+                Authors = new List<string> { "Microsoft" },
+                Type = CitationType.Manual,
+                Year = 2024,
+                Publisher = "Microsoft",
+                Url = "https://learn.microsoft.com/en-us/dotnet/core/extensions/dependency-injection",
+                Abstract = "Guide to dependency injection in .NET applications covering service lifetimes, registration patterns, IServiceCollection, and best practices for building loosely coupled applications.",
+                Tags = new List<string> { ".NET", "dependency-injection", "IoC", "services", "Microsoft" },
+                DomainId = softwareEng
+            },
+            new Citation
+            {
+                Title = "Configuration in ASP.NET Core",
+                Authors = new List<string> { "Microsoft" },
+                Type = CitationType.Manual,
+                Year = 2024,
+                Publisher = "Microsoft",
+                Url = "https://learn.microsoft.com/en-us/aspnet/core/fundamentals/configuration/",
+                Abstract = "Documentation for ASP.NET Core configuration system including options pattern, configuration providers, secrets management, and environment-specific configuration.",
+                Tags = new List<string> { "ASP.NET Core", "configuration", "options-pattern", "secrets", "Microsoft" },
+                DomainId = webDev
+            },
         });
 
         // Set DateAdded for all citations

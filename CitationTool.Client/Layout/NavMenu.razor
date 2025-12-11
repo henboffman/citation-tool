@@ -1,6 +1,8 @@
 @inject NavigationManager Navigation
 @inject ICitationService CitationService
 @inject IDomainService DomainService
+@inject IAppStateService AppState
+@implements IDisposable
 
 <nav class="navbar navbar-expand-lg bg-white border-bottom shadow-sm">
     <div class="container-fluid">
@@ -93,6 +95,10 @@
     protected override async Task OnInitializedAsync()
     {
         await LoadCounts();
+
+        // Subscribe to state changes
+        AppState.OnCitationsChanged += HandleCitationsChanged;
+        AppState.OnDomainsChanged += HandleDomainsChanged;
     }
 
     private async Task LoadCounts()
@@ -111,8 +117,42 @@
         }
     }
 
+    private async void HandleCitationsChanged()
+    {
+        try
+        {
+            var citations = await CitationService.GetAllAsync();
+            _citationCount = citations.Count;
+            await InvokeAsync(StateHasChanged);
+        }
+        catch
+        {
+            // Silently handle errors
+        }
+    }
+
+    private async void HandleDomainsChanged()
+    {
+        try
+        {
+            var domains = await DomainService.GetAllAsync();
+            _domainCount = domains.Count;
+            await InvokeAsync(StateHasChanged);
+        }
+        catch
+        {
+            // Silently handle errors
+        }
+    }
+
     private void OpenQuickSearch()
     {
         Layout?.OpenQuickSearch();
+    }
+
+    public void Dispose()
+    {
+        AppState.OnCitationsChanged -= HandleCitationsChanged;
+        AppState.OnDomainsChanged -= HandleDomainsChanged;
     }
 }

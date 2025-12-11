@@ -7,11 +7,13 @@ public class DomainService : IDomainService
 {
     private readonly IStorageService _storage;
     private readonly IValidator<Domain> _validator;
+    private readonly IAppStateService _appState;
 
-    public DomainService(IStorageService storage, IValidator<Domain> validator)
+    public DomainService(IStorageService storage, IValidator<Domain> validator, IAppStateService appState)
     {
         _storage = storage;
         _validator = validator;
+        _appState = appState;
     }
 
     public async Task<List<Domain>> GetAllAsync()
@@ -51,6 +53,7 @@ public class DomainService : IDomainService
                 "Unable to save domain. Please try again. If the problem persists, try refreshing the page.");
         }
 
+        _appState.NotifyDomainsChanged();
         return ServiceResult<Domain>.Ok(domain);
     }
 
@@ -114,6 +117,7 @@ public class DomainService : IDomainService
                 "Unable to delete domain. Please try again. If the problem persists, try refreshing the page.");
         }
 
+        _appState.NotifyDomainsChanged();
         return ServiceResult.Ok();
     }
 

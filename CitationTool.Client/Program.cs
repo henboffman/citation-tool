@@ -20,6 +20,9 @@ builder.Services.AddBlazoredLocalStorage();
 // Storage Services
 builder.Services.AddScoped<IStorageService, IndexedDbStorageService>();
 
+// App State Service (singleton for event notifications across components)
+builder.Services.AddSingleton<IAppStateService, AppStateService>();
+
 // Application Services
 builder.Services.AddScoped<ICitationService, CitationService>();
 builder.Services.AddScoped<IDomainService, DomainService>();

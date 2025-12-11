@@ -129,6 +129,25 @@ html, body {
     z-index: 1100;
 }
 
+/* Modal dialog z-index fix */
+.modal {
+    z-index: 1055;
+}
+
+.modal-backdrop {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100vw;
+    height: 100vh;
+    z-index: -1;
+}
+
+.modal-dialog {
+    position: relative;
+    z-index: 1;
+}
+
 /* Quick search modal */
 .quick-search-backdrop {
     position: fixed;

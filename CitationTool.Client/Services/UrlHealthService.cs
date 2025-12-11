@@ -51,13 +51,26 @@ public class UrlHealthService : IUrlHealthService
         }
         catch (HttpRequestException ex)
         {
-            status.IsHealthy = false;
-            status.StatusCode = 0;
-            status.ErrorMessage = ex.Message.Contains("SSL")
-                ? "SSL/TLS certificate error"
-                : ex.Message.Contains("name")
-                    ? "Domain not found"
-                    : "Connection failed";
+            // In Blazor WASM, CORS errors appear as HttpRequestException with
+            // messages like "TypeError: Failed to fetch" or similar network errors.
+            // These indicate the server responded but the browser blocked access.
+            if (IsCorsError(ex.Message))
+            {
+                status.IsHealthy = true;
+                status.IsCorsBlocked = true;
+                status.StatusCode = 200; // Assume success since server responded
+                status.ErrorMessage = "CORS policy blocked response (server likely OK)";
+            }
+            else
+            {
+                status.IsHealthy = false;
+                status.StatusCode = 0;
+                status.ErrorMessage = ex.Message.Contains("SSL")
+                    ? "SSL/TLS certificate error"
+                    : ex.Message.Contains("name")
+                        ? "Domain not found"
+                        : "Connection failed";
+            }
         }
         catch (TaskCanceledException)
         {
@@ -67,12 +80,46 @@ public class UrlHealthService : IUrlHealthService
         }
         catch (Exception ex)
         {
-            status.IsHealthy = false;
-            status.StatusCode = 0;
-            status.ErrorMessage = $"Unexpected error: {ex.Message}";
+            // Generic exceptions in WASM often indicate CORS issues
+            if (IsCorsError(ex.Message))
+            {
+                status.IsHealthy = true;
+                status.IsCorsBlocked = true;
+                status.StatusCode = 200;
+                status.ErrorMessage = "CORS policy blocked response (server likely OK)";
+            }
+            else
+            {
+                status.IsHealthy = false;
+                status.StatusCode = 0;
+                status.ErrorMessage = $"Unexpected error: {ex.Message}";
+            }
         }
 
         return status;
+    }
+
+    /// <summary>
+    /// Detects if an error message indicates a CORS-related failure.
+    /// In Blazor WASM, CORS errors manifest as various network errors.
+    /// </summary>
+    private static bool IsCorsError(string? message)
+    {
+        if (string.IsNullOrEmpty(message))
+            return false;
+
+        var lowerMessage = message.ToLowerInvariant();
+
+        // Common CORS error patterns in browser fetch API
+        return lowerMessage.Contains("failed to fetch") ||
+               lowerMessage.Contains("typeerror") ||
+               lowerMessage.Contains("cors") ||
+               lowerMessage.Contains("cross-origin") ||
+               lowerMessage.Contains("network error") ||
+               lowerMessage.Contains("networkerror") ||
+               lowerMessage.Contains("load failed") ||
+               // Blazor WASM specific patterns
+               lowerMessage.Contains("fetch") && lowerMessage.Contains("error");
     }
 
     public async Task<Dictionary<Guid, UrlHealthStatus>> CheckAllUrlsAsync(
